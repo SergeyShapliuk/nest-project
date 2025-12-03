@@ -7,9 +7,10 @@ import { UserModule } from './modules/users/user.module';
 import { CoreModule } from './core/core.module';
 import { PostModule } from './modules/posts/post.module';
 import { BlogModule } from './modules/blogs/blog.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [MongooseModule.forRoot(SETTINGS.MONGO_URL),
+  imports: [ConfigModule.forRoot(), MongooseModule.forRoot(SETTINGS.MONGO_URL),
     UserModule, PostModule, BlogModule, CoreModule],
   controllers: [AppController],
   providers: [AppService],
