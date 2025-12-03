@@ -8,10 +8,11 @@ import { CoreModule } from './core/core.module';
 import { PostModule } from './modules/posts/post.module';
 import { BlogModule } from './modules/blogs/blog.module';
 import { ConfigModule } from '@nestjs/config';
+import { TestingModule } from './modules/testing/testing.module';
 
 @Module({
   imports: [ConfigModule.forRoot(), MongooseModule.forRoot(SETTINGS.MONGO_URL),
-    UserModule, PostModule, BlogModule, CoreModule],
+    UserModule, PostModule, BlogModule, TestingModule, CoreModule],
   controllers: [AppController],
   providers: [AppService],
 })
