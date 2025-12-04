@@ -39,7 +39,7 @@ export class BaseQueryParams {
   })
   @IsString()
   @IsIn(['asc', 'desc'])
-  sortDirection: 'asc' | 'desc' = 'desc';
+  sortDirection: 'asc' | 'desc' = 'desc' as SortDirection;
 
   calculateSkip() {
     return (this.pageNumber - 1) * this.pageSize;
