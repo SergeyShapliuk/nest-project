@@ -6,7 +6,6 @@ import { GetBlogsQueryParams } from '../../api/input-dto/get-blogs-query-params.
 import { BlogViewDto } from '../../api/view-dto/blogs.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { FilterQuery } from 'mongoose';
-import { exec } from 'child_process';
 
 
 @Injectable()
@@ -47,6 +46,19 @@ export class BlogsQwRepository {
     const filter: FilterQuery<Blog> = {
       deletedAt: null,
     };
+
+    if (queryDto.searchNameTerm) {
+      orConditions.push({
+        name: {
+          $regex: queryDto.searchNameTerm.trim(),
+          $options: 'i',
+        },
+      });
+      // filter.$or = filter.$or || [];
+      // filter.$or.push({
+      //   email: { $regex: queryDto.searchEmailTerm, $options: 'i' },
+      // });
+    }
 
     if (orConditions.length > 0) {
       filter.$or = orConditions;

@@ -47,14 +47,14 @@ export class PostsQwRepository {
     //
     // const skip = (pageNumber - 1) * pageSize;
     // const filter: any = {};
-    const orConditions: any[] = [];
+    // const orConditions: any[] = [];
     const filter: FilterQuery<Post> = {
       deletedAt: null,
     };
 
-    if (orConditions.length > 0) {
-      filter.$or = orConditions;
-    }
+    // if (orConditions.length > 0) {
+    //   filter.$or = orConditions;
+    // }
     // const filter = orConditions.length > 0 ? { $or: orConditions } : {};
 
     const sortDirectionNumber = queryDto.sortDirection === 'asc' ? 1 : -1;
@@ -64,8 +64,8 @@ export class PostsQwRepository {
       // .collation({locale: "en", strength: 2})
       .sort({ [queryDto.sortBy]: sortDirectionNumber })
       .skip(queryDto.calculateSkip())
-      .limit(queryDto.pageSize);
-    // .toArray();
+      .limit(queryDto.pageSize)
+      .exec();
 
     const totalCount = await this.PostModel.countDocuments(filter);
 

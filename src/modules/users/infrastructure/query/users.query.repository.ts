@@ -41,46 +41,39 @@ export class UsersQwRepository {
     //
     // const skip = (pageNumber - 1) * pageSize;
     // const filter: any = {};
-    // const orConditions: any[] = [];
+    const orConditions: any[] = [];
     const filter: FilterQuery<User> = {
       deletedAt: null,
     };
+
     if (queryDto.searchLoginTerm) {
-      filter.$or = filter.$or || [];
-      filter.$or.push({
-        login: { $regex: queryDto.searchLoginTerm, $options: 'i' },
+      orConditions.push({
+        login: {
+          $regex: queryDto.searchLoginTerm.trim(),
+          $options: 'i',
+        },
+        // filter.$or = filter.$or || [];
+        // filter.$or.push({
+        //   login: { $regex: queryDto.searchLoginTerm, $options: 'i' },
       });
     }
 
     if (queryDto.searchEmailTerm) {
-      // orConditions.push({
-      //   email: {
-      //     $regex: queryDto.searchEmailTerm.trim(),
-      //     $options: 'i',
-      //   },
-      // });
-      filter.$or = filter.$or || [];
-      filter.$or.push({
-        email: { $regex: queryDto.searchEmailTerm, $options: 'i' },
+      orConditions.push({
+        email: {
+          $regex: queryDto.searchEmailTerm.trim(),
+          $options: 'i',
+        },
       });
+      // filter.$or = filter.$or || [];
+      // filter.$or.push({
+      //   email: { $regex: queryDto.searchEmailTerm, $options: 'i' },
+      // });
     }
 
-    // if (queryDto.searchLoginTerm?.trim()) {
-    //   filter.$or = filter.$or || [];
-    //   filter.$or.push({
-    //     login: { $regex: queryDto.searchLoginTerm, $options: 'i' },
-    //   });
-    // }
-    //
-    // if (queryDto.searchEmailTerm?.trim()) {
-    //   filter.$or = filter.$or || [];
-    //   filter.$or.push({
-    //     email: { $regex: queryDto.searchEmailTerm, $options: 'i' },
-    //   });
-    // }
-    // if (orConditions.length > 0) {
-    //   filter.$or = orConditions;
-    // }
+    if (orConditions.length > 0) {
+      filter.$and = orConditions;
+    }
     // const filter = orConditions.length > 0 ? { $or: orConditions } : {};
 
     const sortDirectionNumber = queryDto.sortDirection === 'asc' ? 1 : -1;
@@ -90,8 +83,8 @@ export class UsersQwRepository {
       // .collation({locale: "en", strength: 2})
       .sort({ [queryDto.sortBy]: sortDirectionNumber })
       .skip(queryDto.calculateSkip())
-      .limit(queryDto.pageSize);
-    // .toArray();
+      .limit(queryDto.pageSize)
+      .exec();
 
     const totalCount = await this.UserModel.countDocuments(filter);
     const items = users.map(UserViewDto.mapToView);
