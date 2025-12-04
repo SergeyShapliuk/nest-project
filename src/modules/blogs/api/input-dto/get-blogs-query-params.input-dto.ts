@@ -20,6 +20,10 @@ export class GetBlogsQueryParams extends BaseQueryParams {
   sortBy: string = BlogsSortBy.CreatedAt;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    // Преобразуем пустую строку в null
+    return value?.trim() || null;
+  })
   @IsString()
   searchNameTerm: string | null = null;
 }

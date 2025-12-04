@@ -19,7 +19,18 @@ export class GetUsersQueryParams extends BaseQueryParams {
   sortBy: string = UsersSortBy.CreatedAt;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    // Преобразуем пустую строку в null
+    return value?.trim() || null;
+  })
   @IsString()
   searchLoginTerm: string | null = null;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    // Преобразуем пустую строку в null
+    return value?.trim() || null;
+  })
+  @IsString()
   searchEmailTerm: string | null = null;
 }
