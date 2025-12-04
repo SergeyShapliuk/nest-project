@@ -72,7 +72,7 @@ export class UsersQwRepository {
     }
 
     if (orConditions.length > 0) {
-      filter.$and = orConditions;
+      filter.$or = orConditions;
     }
     // const filter = orConditions.length > 0 ? { $or: orConditions } : {};
 
