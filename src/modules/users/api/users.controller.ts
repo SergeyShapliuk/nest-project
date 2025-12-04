@@ -17,7 +17,7 @@ export class UsersController {
   @Get()
   async getAll(@Query() query: GetUsersQueryParams): Promise<PaginatedViewDto<UserViewDto[]>> {
     // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
-    console.log('getAll');
+    console.log('getAll',query);
     // const { items, totalCount } = await this.userService.findMany(queryInput);
     // const postListOutput = mapToUserListPaginatedOutput(items, {
     //   pageNumber: queryInput.pageNumber,

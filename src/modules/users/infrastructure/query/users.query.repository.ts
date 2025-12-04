@@ -41,25 +41,27 @@ export class UsersQwRepository {
     //
     // const skip = (pageNumber - 1) * pageSize;
     // const filter: any = {};
-    const orConditions: any[] = [];
+    // const orConditions: any[] = [];
     const filter: FilterQuery<User> = {
-    deletedAt: null,
+      deletedAt: null,
     };
-    if (queryDto.searchLoginTerm && queryDto.searchLoginTerm?.trim() !== '') {
-      orConditions.push({
-        login: {
-          $regex: queryDto.searchLoginTerm.trim(),
-          $options: 'i',
-        },
+    if (queryDto.searchLoginTerm) {
+      filter.$or = filter.$or || [];
+      filter.$or.push({
+        login: { $regex: queryDto.searchLoginTerm, $options: 'i' },
       });
     }
 
-    if (queryDto.searchEmailTerm && queryDto.searchEmailTerm.trim()) {
-      orConditions.push({
-        email: {
-          $regex: queryDto.searchEmailTerm.trim(),
-          $options: 'i',
-        },
+    if (queryDto.searchEmailTerm) {
+      // orConditions.push({
+      //   email: {
+      //     $regex: queryDto.searchEmailTerm.trim(),
+      //     $options: 'i',
+      //   },
+      // });
+      filter.$or = filter.$or || [];
+      filter.$or.push({
+        email: { $regex: queryDto.searchEmailTerm, $options: 'i' },
       });
     }
 
@@ -76,9 +78,9 @@ export class UsersQwRepository {
     //     email: { $regex: queryDto.searchEmailTerm, $options: 'i' },
     //   });
     // }
-    if (orConditions.length > 0) {
-      filter.$or = orConditions;
-    }
+    // if (orConditions.length > 0) {
+    //   filter.$or = orConditions;
+    // }
     // const filter = orConditions.length > 0 ? { $or: orConditions } : {};
 
     const sortDirectionNumber = queryDto.sortDirection === 'asc' ? 1 : -1;
