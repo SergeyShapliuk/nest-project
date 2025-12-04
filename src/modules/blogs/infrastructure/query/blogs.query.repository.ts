@@ -6,6 +6,7 @@ import { GetBlogsQueryParams } from '../../api/input-dto/get-blogs-query-params.
 import { BlogViewDto } from '../../api/view-dto/blogs.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { FilterQuery } from 'mongoose';
+import { exec } from 'child_process';
 
 
 @Injectable()
@@ -59,8 +60,8 @@ export class BlogsQwRepository {
       // .collation({locale: "en", strength: 2})
       .sort({ [queryDto.sortBy]: sortDirectionNumber })
       .skip(queryDto.calculateSkip())
-      .limit(queryDto.pageSize);
-    // .toArray();
+      .limit(queryDto.pageSize)
+      .exec();
 
     const totalCount = await this.BlogModel.countDocuments(filter);
     const items = blogs.map(BlogViewDto.mapToView);

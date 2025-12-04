@@ -17,14 +17,11 @@ export class PostsController {
 
   @Get()
   async getAll(@Query() query: GetPostsQueryParams): Promise<PaginatedViewDto<PostViewDto[]>> {
-    // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
-    console.log('getAll', query);
-    // const { items, totalCount } = await this.userService.findMany(queryInput);
-    // const postListOutput = mapToUserListPaginatedOutput(items, {
-    //   pageNumber: queryInput.pageNumber,
-    //   pageSize: queryInput.pageSize,
-    //   totalCount,
-    // });
+    console.log('=== GET /posts ===');
+    console.log('Raw query:', query);
+    console.log('Type of pageNumber:', typeof query?.pageNumber, 'value:', query?.pageNumber);
+    console.log('Type of pageSize:', typeof query?.pageSize, 'value:', query?.pageSize);
+    console.log('Type of sortDirection:', typeof query?.sortDirection, 'value:', query?.sortDirection);
     return this.postsQwRepository.getAll(query);
   }
 
