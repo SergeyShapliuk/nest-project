@@ -9,18 +9,22 @@ export class PostViewDto {
   blogId: string;
   blogName: string;
   createdAt: string;
-  // extendedLikesInfo: {
-  //   likesCount: number;
-  //   dislikesCount: number;
-  //   myStatus: "Like" | "Dislike" | "None",
-  //   newestLikes: Array<{
-  //     addedAt: string;
-  //     userId: string;
-  //     login: string;
-  //   }>;
-  // };
+  extendedLikesInfo: {
+    likesCount: number;
+    dislikesCount: number;
+    myStatus: 'Like' | 'Dislike' | 'None',
+    newestLikes: Array<{
+      addedAt: string;
+      userId: string;
+      login: string;
+    }>;
+  };
 
-  static mapToView(post: PostDocument): PostViewDto {
+  static mapToView(post: PostDocument, myStatus: 'Like' | 'Dislike' | 'None', newestLikes: {
+    addedAt: string;
+    userId: string;
+    login: string;
+  }[]): PostViewDto {
     const dto = new PostViewDto();
 
     dto.id = post._id.toString();
@@ -31,12 +35,12 @@ export class PostViewDto {
     dto.blogName = post.blogName;
     dto.createdAt = post.createdAt.toISOString();
 
-    // dto.extendedLikesInfo = {
-    //   likesCount: post.extendedLikesInfo.likesCount,
-    //   dislikesCount: post.extendedLikesInfo.dislikesCount,
-    //   myStatus: post.extendedLikesInfo.myStatus,
-    //   newestLikes:
-    // };
+    dto.extendedLikesInfo = {
+      likesCount: post.extendedLikesInfo.likesCount,
+      dislikesCount: post.extendedLikesInfo.dislikesCount,
+      myStatus,
+      newestLikes,
+    };
 
     return dto;
   }

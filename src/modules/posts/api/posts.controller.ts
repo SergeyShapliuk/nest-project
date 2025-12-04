@@ -7,8 +7,6 @@ import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dt
 import { PostsQwRepository } from '../infrastructure/query/posts.query.repository';
 import { ApiParam } from '@nestjs/swagger';
 import { CreatePostInputDto } from './input-dto/posts.input-dto';
-import { BlogViewDto } from '../../blogs/api/view-dto/blogs.view-dto';
-import { UpdateBlogInputDto } from '../../blogs/api/input-dto/update-blog.input-dto';
 import { UpdatePostInputDto } from './input-dto/update-post.input-dto';
 
 @Controller(POSTS_PATH)

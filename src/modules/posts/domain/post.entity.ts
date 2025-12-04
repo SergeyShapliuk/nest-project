@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
-import { UpdateBlogDto } from '../../blogs/dto/update-blog.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
 
 
@@ -53,8 +52,8 @@ export class Post {
   @Prop({ type: String, required: true })
   blogId: string;
 
-  // @Prop({ type: ExtendedLikesInfoSchema, required: true })
-  // emailConfirmation: ExtendedLikesInfo;
+  @Prop({ type: ExtendedLikesInfoSchema, required: true, default: () => ({}) })
+  extendedLikesInfo: ExtendedLikesInfo;
 
   // Эти поля добавятся автоматически благодаря timestamps: true
   createdAt: Date;

@@ -6,18 +6,21 @@ import { Post } from '../../domain/post.entity';
 import type { PostModelType } from '../../domain/post.entity';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
 import { PostViewDto } from '../../api/view-dto/posts.view-dto';
+import { PostsLikeRepository } from '../posts.like.repository';
 
 
 @Injectable()
 export class PostsByBlogIdQueryRepository {
   constructor(
     @InjectModel(Post.name) private PostModel: PostModelType,
+    private postsLikeRepository: PostsLikeRepository,
   ) {
   }
 
   async getPostsByBlogId(
     queryDto: GetPostsQueryParams,
     blogId: string,
+    userId?: string,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
 
     console.log('getPostsByBlogId', queryDto);
@@ -45,7 +48,22 @@ export class PostsByBlogIdQueryRepository {
     // .toArray();
 
     const totalCount = await this.PostModel.countDocuments(filter);
-    const items = posts.map(PostViewDto.mapToView);
+
+    // Получаем все необходимые данные о лайках
+    const postIds = posts.map(post => post._id.toString());
+    const [statusesMap, newestLikesMap] = await Promise.all([
+      this.postsLikeRepository.getUserPostLikeStatuses(postIds, userId),
+      this.postsLikeRepository.getPostsNewestLikes(postIds),
+    ]);
+    // Маппим синхронно (без дополнительных запросов к БД)
+    const items = posts.map(post => {
+      const postId = post._id.toString();
+      return PostViewDto.mapToView(
+        post,
+        statusesMap[postId] || 'None',
+        newestLikesMap[postId] || [],
+      );
+    });
 
     return PaginatedViewDto.mapToView({
       items,

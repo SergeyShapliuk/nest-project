@@ -6,29 +6,35 @@ import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.
 import { PostViewDto } from '../../api/view-dto/posts.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { FilterQuery } from 'mongoose';
+import { PostsLikeRepository } from '../posts.like.repository';
 
 @Injectable()
 export class PostsQwRepository {
   constructor(
     @InjectModel(Post.name) private PostModel: PostModelType,
+    private postsLikeRepository: PostsLikeRepository,
   ) {
   }
 
-  async getByIdOrNotFoundFail(id: string): Promise<PostViewDto> {
-    const user = await this.PostModel.findOne({
+  async getByIdOrNotFoundFail(id: string, userId?: string): Promise<PostViewDto> {
+    const post = await this.PostModel.findOne({
       _id: id,
       deletedAt: null,
     });
 
-    if (!user) {
+    if (!post) {
       throw new NotFoundException('post not found');
     }
-
-    return PostViewDto.mapToView(user);
+    const [myStatus, newestLikes] = await Promise.all([
+      this.postsLikeRepository.getUserPostLikeStatus(id, userId),
+      this.postsLikeRepository.getPostNewestLikes(id),
+    ]);
+    return PostViewDto.mapToView(post, myStatus, newestLikes);
   }
 
   async getAll(
     queryDto: GetPostsQueryParams,
+    userId?: string,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     // const {
     //   pageNumber,
@@ -43,7 +49,7 @@ export class PostsQwRepository {
     // const filter: any = {};
     const orConditions: any[] = [];
     const filter: FilterQuery<Post> = {
-    deletedAt: null,
+      deletedAt: null,
     };
 
     if (orConditions.length > 0) {
@@ -53,7 +59,7 @@ export class PostsQwRepository {
 
     const sortDirectionNumber = queryDto.sortDirection === 'asc' ? 1 : -1;
 
-    const users = await this.PostModel
+    const posts = await this.PostModel
       .find(filter)
       // .collation({locale: "en", strength: 2})
       .sort({ [queryDto.sortBy]: sortDirectionNumber })
@@ -62,8 +68,22 @@ export class PostsQwRepository {
     // .toArray();
 
     const totalCount = await this.PostModel.countDocuments(filter);
-    const items = users.map(PostViewDto.mapToView);
 
+    // Получаем все необходимые данные о лайках
+    const postIds = posts.map(post => post._id.toString());
+    const [statusesMap, newestLikesMap] = await Promise.all([
+      this.postsLikeRepository.getUserPostLikeStatuses(postIds, userId),
+      this.postsLikeRepository.getPostsNewestLikes(postIds),
+    ]);
+    // Маппим синхронно (без дополнительных запросов к БД)
+    const items = posts.map(post => {
+      const postId = post._id.toString();
+      return PostViewDto.mapToView(
+        post,
+        statusesMap[postId] || 'None',
+        newestLikesMap[postId] || [],
+      );
+    });
     return PaginatedViewDto.mapToView({
       items,
       totalCount,
