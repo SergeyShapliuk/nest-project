@@ -1,4 +1,3 @@
-
 //dto для запроса списка юзеров с пагинацией, сортировкой, фильтрами
 import { BaseQueryParams } from '../../../../core/dto/base.query-params.input-dto';
 import { PostsSortBy } from './posts-sort-by';
@@ -10,7 +9,7 @@ export class GetPostsQueryParams extends BaseQueryParams {
   @IsOptional()
   @Transform(({ value }) => {
     // Если значение не из допустимых, используем 'createdAt' по умолчанию
-    const allowedValues = Object.values(PostsSortBy);
+    const allowedValues = Object.values(PostsSortBy as any);
     if (!value || !allowedValues.includes(value)) {
       return 'createdAt';
     }

@@ -4,19 +4,20 @@ import { BlogsSortBy } from './blogs-sort-by';
 import { IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
+
 export class GetBlogsQueryParams extends BaseQueryParams {
   @IsOptional()
   @Transform(({ value }) => {
     // Если значение не из допустимых, используем 'createdAt' по умолчанию
-    const allowedValues = Object.values(BlogsSortBy);
+    const allowedValues = Object.values(BlogsSortBy as any);
     if (!value || !allowedValues.includes(value)) {
-      return 'createdAt';
+      return BlogsSortBy.CreatedAt;
     }
 
     return value;
   })
   @IsString()
-  sortBy: string = 'createdAt';
+  sortBy: string = BlogsSortBy.CreatedAt;
 
   @IsOptional()
   @IsString()
