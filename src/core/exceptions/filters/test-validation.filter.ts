@@ -10,7 +10,7 @@ export class TestValidationFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-
+console.log({exception})
     // Обрабатываем ТОЛЬКО ошибки валидации
     if (exception.code === DomainExceptionCode.ValidationError) {
       const errorsMessages = exception.extensions.map(ext => {

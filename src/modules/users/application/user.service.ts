@@ -34,11 +34,22 @@ export class UserService {
     const userWithTheSameLogin = await this.usersRepository.findByLogin(
       dto.login,
     );
+    const userWithTheSameEmail = await this.usersRepository.findByEmail(
+      dto.email,
+    );
 
     if (!!userWithTheSameLogin) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'User with the same login already exists',
+        field:'login'
+      });
+    }
+    if (!!userWithTheSameEmail) {
+      throw new DomainException({
+        code: DomainExceptionCode.BadRequest,
+        message: 'User with the same email already exists',
+        field:'email'
       });
     }
 

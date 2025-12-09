@@ -9,6 +9,8 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { Types } from 'mongoose';
 import { UserService } from './user.service';
 import bcrypt from 'bcrypt';
+import { DomainException } from '../../../core/exceptions/domain-exceptions';
+import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
 
 @Injectable()
 export class AuthService {
@@ -76,8 +78,11 @@ export class AuthService {
     console.log('confirmCode:', user);
     console.log('confirmCode2:', user1);
     if (!user) {
-      //TODO: replace with domain exception
-      throw new NotFoundException('user not found');
+      throw new DomainException({
+        code: DomainExceptionCode.BadRequest,
+        message: 'user not found',
+        field:'code'
+      });
     }
 
     console.log('registerUserFind:', user);
@@ -91,12 +96,19 @@ export class AuthService {
     const user = await this.usersRepository.findByEmail(email);
     console.log('registerUserFind:', user);
     if (!user) {
-      //TODO: replace with domain exception
-      throw new NotFoundException('user not found');
+      throw new DomainException({
+        code: DomainExceptionCode.BadRequest,
+        message: 'user not found',
+        // field:'login'
+      });
     }
-    // const user = await this.usersRepository.findOrNotFoundFail(
-    //   new Types.ObjectId(userId).toString(),
-    // );
+    if (user.emailConfirmation.isConfirmed) {
+      throw new DomainException({
+        code: DomainExceptionCode.BadRequest,
+        message: 'user is confirmed',
+        field:'email'
+      });
+    }
     console.log('resendCode:', user);
     const newConfirmationCode = randomUUID();
     const newExpirationDate = new Date(Date.now() + 5 * 60 * 1000);
@@ -104,9 +116,9 @@ export class AuthService {
     user.setCode(newConfirmationCode, newExpirationDate);
     await this.usersRepository.save(user);
 
-    this.emailService
-      .sendConfirmationEmail(user.email, newConfirmationCode)
-      .catch(console.error);
+    // this.emailService
+    //   .sendConfirmationEmail(user.email, newConfirmationCode)
+    //   .catch(console.error);
   }
 
   async passwordRecovery(email: string) {

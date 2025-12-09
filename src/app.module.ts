@@ -23,18 +23,18 @@ import configuration from './core/config/configuration';
     UserModule, PostModule, BlogModule, TestingModule, CoreModule],
   controllers: [AppController],
   providers: [AppService,
-    {
-      provide: APP_FILTER,
-      useClass: TestValidationFilter,
-    },
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: TestValidationFilter,
+    // },
     //   {
     //   provide: APP_FILTER,
     //   useClass: AllHttpExceptionsFilter,
     // },
-    //   {
-    //     provide: APP_FILTER,
-    //     useClass: DomainHttpExceptionsFilter,
-    //   }
+      {
+        provide: APP_FILTER,
+        useClass: DomainHttpExceptionsFilter,
+      }
   ],
 })
 export class AppModule {
