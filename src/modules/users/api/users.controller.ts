@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from '../application/user.service';
 import { USERS_PATH } from '../../../core/paths/paths';
 import { UserViewDto } from './view-dto/users.view-dto';
@@ -11,6 +23,8 @@ import { Types } from 'mongoose';
 import { ObjectIdValidationPipe } from '../../../core/pipes/object-id-validation-transformation-pipe.service';
 import { Public } from '../guards/decorators/public.decorator';
 import { UpdateUserInputDto } from './input-dto/update-user.input-dto';
+import { LocalAuthGuard } from '../guards/local/local-auth.guard';
+import { BasicAuthGuard } from '../guards/basic/basic-auth.guard';
 
 @Controller(USERS_PATH)
 export class UsersController {
@@ -25,6 +39,7 @@ export class UsersController {
   ): Promise<UserViewDto> {
     return this.usersQwRepository.getByIdOrNotFoundFail(id);
   }
+
   @Public()
   @Get()
   async getAll(
@@ -34,6 +49,7 @@ export class UsersController {
   }
 
   @Post()
+  @UseGuards(BasicAuthGuard)
   async createUser(@Body() body: CreateUserInputDto): Promise<UserViewDto> {
 
     const createdUserId = await this.userService.createUser(body);
@@ -56,6 +72,7 @@ export class UsersController {
   @ApiParam({ name: 'id' }) //для сваггер
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(BasicAuthGuard)
   async deleteUser(@Param('id') id: string): Promise<void> {
 
     return this.userService.deleteUser(id);

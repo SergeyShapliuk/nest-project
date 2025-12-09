@@ -12,21 +12,30 @@ import { TestingModule } from './modules/testing/testing.module';
 import { APP_FILTER } from '@nestjs/core';
 import { AllHttpExceptionsFilter } from './core/exceptions/filters/all-exceptions.filter';
 import { DomainHttpExceptionsFilter } from './core/exceptions/filters/domain-exceptions.filter';
+import { TestValidationFilter } from './core/exceptions/filters/test-validation.filter';
+import configuration from './core/config/configuration';
 
 @Module({
-  imports: [ConfigModule.forRoot(), MongooseModule.forRoot(SETTINGS.MONGO_URL),
+  imports: [ConfigModule.forRoot({
+    isGlobal: true,
+    load: [configuration],
+  }), MongooseModule.forRoot(SETTINGS.MONGO_URL),
     UserModule, PostModule, BlogModule, TestingModule, CoreModule],
   controllers: [AppController],
   providers: [AppService,
     {
-    provide: APP_FILTER,
-    useClass: AllHttpExceptionsFilter,
-  },
-    {
       provide: APP_FILTER,
-      useClass: DomainHttpExceptionsFilter,
-    }
-    ],
+      useClass: TestValidationFilter,
+    },
+    //   {
+    //   provide: APP_FILTER,
+    //   useClass: AllHttpExceptionsFilter,
+    // },
+    //   {
+    //     provide: APP_FILTER,
+    //     useClass: DomainHttpExceptionsFilter,
+    //   }
+  ],
 })
 export class AppModule {
 }

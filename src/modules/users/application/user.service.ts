@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { UsersRepository } from '../infrastructure/users.repository';
 import { UsersQwRepository } from '../infrastructure/query/users.query.repository';
 import { CreateUserDto } from '../dto/create-user.dto';
-import bcrypt from 'bcrypt';
-import { randomUUID } from 'crypto';
 import { User } from '../domain/user.entity';
 import type { UserModelType } from '../domain/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
@@ -11,6 +9,7 @@ import { EmailService } from '../../notifications/email.service';
 import { CryptoService } from './crypto.service';
 import { DomainException } from '../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
+import { Types } from 'mongoose';
 
 
 @Injectable()
@@ -59,7 +58,7 @@ export class UserService {
   }
 
   async deleteUser(id: string) {
-    const user = await this.usersRepository.findOrNotFoundFail(id);
+    const user = await this.usersRepository.findOrNotFoundFail(new Types.ObjectId(id).toString());
     user.makeDeleted();
 
     await this.usersRepository.save(user);
