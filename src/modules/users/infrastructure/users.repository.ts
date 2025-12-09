@@ -32,6 +32,25 @@ export class UsersRepository {
     return user;
   }
 
+  findByLogin(login: string): Promise<UserDocument | null> {
+    return this.UserModel.findOne({ login });
+  }
+
+  findByEmail(email: string): Promise<UserDocument | null> {
+    return this.UserModel.findOne({ email });
+  }
+
+  findByCode(code: string): Promise<UserDocument | null> {
+    return this.UserModel.findOne({
+      'emailConfirmation.confirmationCode': code,
+      'emailConfirmation.expirationDate': { $gt: new Date() },
+    });
+  }
+
+  async loginIsExist(login: string): Promise<boolean> {
+    return !!(await this.UserModel.countDocuments({ login: login }));
+  }
+
   // async findByLoginOrEmail(loginOrEmail: string): Promise<WithId<User> | null> {
   //   return userCollection.findOne({
   //     $or: [{ email: loginOrEmail }, { login: loginOrEmail }],

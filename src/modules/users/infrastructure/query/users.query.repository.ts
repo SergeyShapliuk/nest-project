@@ -38,7 +38,7 @@ export class UsersQwRepository {
     //   searchLoginTerm,
     //   searchEmailTerm,
     // } = queryDto;
-    //
+   console.log({queryDto})
     // const skip = (pageNumber - 1) * pageSize;
     // const filter: any = {};
     const orConditions: any[] = [];

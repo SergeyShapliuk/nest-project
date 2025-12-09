@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
+import { CreateUserDomainDto } from './dto/create-user.domain.dto';
 
 
 export const loginConstraints = {
@@ -63,22 +64,16 @@ export class User {
     return this._id.toString();
   }
 
-  static createInstance(dto: {
-    login: string;
-    email: string;
-    passwordHash: string;
-    confirmationCode: string;
-    expirationDate: Date;
-  }): UserDocument {
+  static createInstance(dto: CreateUserDomainDto): UserDocument {
     const user = new this();
 
     user.login = dto.login;
     user.email = dto.email;
-    user.passwordHash = dto.passwordHash;
+    user.passwordHash = dto.password;
 
     user.emailConfirmation = {
-      confirmationCode: dto.confirmationCode,
-      expirationDate: dto.expirationDate,
+      confirmationCode: 'code',
+      expirationDate: new Date(),
       isConfirmed: false, // всегда false при создании
     };
 
@@ -103,6 +98,24 @@ export class User {
       throw new Error('Email already confirmed');
     }
     this.emailConfirmation.isConfirmed = true;
+  }
+
+  setCode(newCode: string, newExpiration: Date) {
+    if (this.emailConfirmation.confirmationCode === newCode) {
+      return;
+    }
+    this.emailConfirmation = {
+      confirmationCode: newCode,
+      expirationDate: newExpiration,
+      isConfirmed: false,
+    };
+  }
+
+  setNewPassword(newPassword: string) {
+    if (this.passwordHash === newPassword) {
+      return;
+    }
+    this.passwordHash = newPassword;
   }
 
   updateEmail(newEmail: string, newCode: string, newExpiration: Date) {

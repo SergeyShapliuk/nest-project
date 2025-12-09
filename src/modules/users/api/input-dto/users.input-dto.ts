@@ -5,12 +5,13 @@ import {
   passwordConstraints,
 } from '../../domain/user.entity';
 import { IsStringWithTrim } from '../../../../core/decorators/validation/is-string-with-trim';
+import { CreateUserDto } from '../../dto/create-user.dto';
 
 // Доступные декораторы для валидации
 // https://github.com/typestack/class-validator?tab=readme-ov-file#validation-decorators
 
 //dto для боди при создании юзера. Сюда могут быть добавлены декораторы swagger
-export class CreateUserInputDto {
+export class CreateUserInputDto implements CreateUserDto {
   @IsStringWithTrim(loginConstraints.minLength, loginConstraints.maxLength)
   login: string;
 

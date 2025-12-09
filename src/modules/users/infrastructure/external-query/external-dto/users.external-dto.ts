@@ -1,8 +1,7 @@
-import { UserDocument } from '../../domain/user.entity';
-import { OmitType } from '@nestjs/swagger';
+import { UserDocument } from '../../../domain/user.entity';
 
 
-export class UserViewDto {
+export class UserExternalDto {
   id: string;
   login: string;
   email: string;
@@ -14,8 +13,8 @@ export class UserViewDto {
   //   isConfirmed: boolean;
   // };
 
-  static mapToView(user: UserDocument): UserViewDto {
-    const dto = new UserViewDto();
+  static mapToView(user: UserDocument): UserExternalDto {
+    const dto = new UserExternalDto();
 
     dto.id = user._id.toString();
     dto.login = user.login;
@@ -27,23 +26,6 @@ export class UserViewDto {
     //   expirationDate: user.emailConfirmation.expirationDate.toISOString(),
     //   isConfirmed: user.emailConfirmation.isConfirmed,
     // };
-
-    return dto;
-  }
-}
-
-export class MeViewDto extends OmitType(UserViewDto, [
-  'createdAt',
-  'id',
-] as const) {
-  userId: string;
-
-  static mapToView(user: UserDocument): MeViewDto {
-    const dto = new MeViewDto();
-
-    dto.email = user.email;
-    dto.login = user.login;
-    dto.userId = user._id.toString();
 
     return dto;
   }
