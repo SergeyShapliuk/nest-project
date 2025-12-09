@@ -106,7 +106,7 @@ export class AuthService {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'user not found',
-        // field:'login'
+        field:'email'
       });
     }
     if (user.emailConfirmation.isConfirmed) {
