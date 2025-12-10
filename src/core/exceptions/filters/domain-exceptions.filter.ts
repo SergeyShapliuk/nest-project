@@ -27,10 +27,13 @@ import { ErrorResponseBody } from './error-response-body.type';
 export class DomainHttpExceptionsFilter implements ExceptionFilter {
   catch(exception: DomainException, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
+    const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
     const status = this.mapToHttpStatus(exception.code);
 
     console.log('🔴 DomainException caught:', {
+      url: request.url,           // <-- здесь добавляем URL
+      method: request.method,
       code: exception.code,
       message: exception.message,
       extensions: exception.extensions,
