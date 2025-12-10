@@ -13,17 +13,17 @@ export class EmailService {
 
   constructor(
     private configService: ConfigService,
-    private mailerService: MailerService,
+    // private mailerService: MailerService,
   ) {
 
 
-    // const apiKey = this.configService.get<string>('sendGrid');
-    // if (!apiKey) {
-    //   throw new Error('❌ SENDGRID API KEY not found in config');
-    // }
-    // sgMail.setApiKey(apiKey);
-    //
-    // this.logger.log('📨 SendGrid initialized');
+    const apiKey = this.configService.get<string>('sendGrid');
+    if (!apiKey) {
+      throw new Error('❌ SENDGRID API KEY not found in config');
+    }
+    sgMail.setApiKey(apiKey);
+
+    this.logger.log('📨 SendGrid initialized');
   }
 
   // async testConnection() {
@@ -60,79 +60,79 @@ export class EmailService {
   //
   //
   //
-  async sendConfirmationEmail(email: string, code: string): Promise<void> {
-    //can add html templates, implement advertising and other logic for mailing...
-    console.log('start', email, code);
-    // await this.testConnection();
-    console.log('sendConfirmationEmail', email, code);
-    try {
-      await this.mailerService.sendMail({
-        to: email,
-        subject: 'Your code is here',
-        html: `<h1>Thank for your registration</h1>
-               <p>To finish registration please follow the link below:<br>
-                  <a href='https://somesite.com/confirm-email?code=${code}'>complete registration</a>
-              </p>`,
-      });
-    } catch (e) {
-      console.log('smtp erro');
-      throw Error('smtp erro');
-    }
-  }
-
-  async sendRecoveryPassword(email: string, code: string): Promise<void> {
-    //can add html templates, implement advertising and other logic for mailing...
-    await this.mailerService.sendMail({
-      to: email,
-      subject: 'Your code is here',
-      html: `<h1>Password recovery</h1>
-        <p>To finish password recovery please follow the link below:
-            <a href='https://somesite.com/password-recovery?recoveryCode=${code}'>recovery password</a>
-        </p>`,
-    });
-  }
-
-  // async sendConfirmationEmail(email: string, code: string) {
-  //   // const fromEmail = this.configService.get('sendMail.authMail') ?? 'no-reply@yourdomain.com';
-  //
-  //   const msg = {
-  //     to: email,
-  //     from: 'sergeshapluk.dev@gmail.com',
-  //     subject: 'Your code is here',
-  //     html: `<h1>Thank for your registration</h1>
+  // async sendConfirmationEmail(email: string, code: string): Promise<void> {
+  //   //can add html templates, implement advertising and other logic for mailing...
+  //   console.log('start', email, code);
+  //   // await this.testConnection();
+  //   console.log('sendConfirmationEmail', email, code);
+  //   try {
+  //     await this.mailerService.sendMail({
+  //       to: email,
+  //       subject: 'Your code is here',
+  //       html: `<h1>Thank for your registration</h1>
   //              <p>To finish registration please follow the link below:<br>
   //                 <a href='https://somesite.com/confirm-email?code=${code}'>complete registration</a>
   //             </p>`,
-  //   };
-  //
-  //   try {
-  //     this.logger.log(`✅ ${JSON.stringify(msg)}`);
-  //     await sgMail.send(msg);
-  //     this.logger.log(`✅ Email sent to ${email}`);
-  //   } catch (error) {
-  //     this.logger.error('❌ Error sending email', error);
-  //
-  //     if (error.response?.body) {
-  //       this.logger.error(error.response.body);
-  //     }
-  //
-  //     throw error;
+  //     });
+  //   } catch (e) {
+  //     console.log('smtp erro');
+  //     throw Error('smtp erro');
   //   }
   // }
   //
-  // async sendRecoveryPassword(email: string, code: string) {
-  //   // const fromEmail = this.configService.get('sendMail.authMail') ?? 'no-reply@yourdomain.com';
-  //
-  //   const msg = {
+  // async sendRecoveryPassword(email: string, code: string): Promise<void> {
+  //   //can add html templates, implement advertising and other logic for mailing...
+  //   await this.mailerService.sendMail({
   //     to: email,
-  //     from: 'sergeshapluk.dev@gmail.com',
   //     subject: 'Your code is here',
-  //     html: `<h1>Thank for your registration</h1>
-  //              <p>To finish registration please follow the link below:<br>
-  //                 <a href='https://somesite.com/confirm-email?code=${code}'>complete registration</a>
-  //             </p>`,
-  //   };
-  //
+  //     html: `<h1>Password recovery</h1>
+  //       <p>To finish password recovery please follow the link below:
+  //           <a href='https://somesite.com/password-recovery?recoveryCode=${code}'>recovery password</a>
+  //       </p>`,
+  //   });
+  // }
+
+  async sendConfirmationEmail(email: string, code: string) {
+    // const fromEmail = this.configService.get('sendMail.authMail') ?? 'no-reply@yourdomain.com';
+
+    const msg = {
+      to: email,
+      from: 'sergeshapluk.dev@gmail.com',
+      subject: 'Your code is here',
+      html: `<h1>Thank for your registration</h1>
+               <p>To finish registration please follow the link below:<br>
+                  <a href='https://somesite.com/confirm-email?code=${code}'>complete registration</a>
+              </p>`,
+    };
+
+    try {
+      this.logger.log(`✅ ${JSON.stringify(msg)}`);
+      await sgMail.send(msg);
+      this.logger.log(`✅ Email sent to ${email}`);
+    } catch (error) {
+      this.logger.error('❌ Error sending email', error);
+
+      if (error.response?.body) {
+        this.logger.error(error.response.body);
+      }
+
+      throw error;
+    }
+  }
+
+  async sendRecoveryPassword(email: string, code: string) {
+    // const fromEmail = this.configService.get('sendMail.authMail') ?? 'no-reply@yourdomain.com';
+
+    const msg = {
+      to: email,
+      from: 'sergeshapluk.dev@gmail.com',
+      subject: 'Your code is here',
+      html: `<h1>Thank for your registration</h1>
+               <p>To finish registration please follow the link below:<br>
+                  <a href='https://somesite.com/confirm-email?code=${code}'>complete registration</a>
+              </p>`,
+    };
+
   //   try {
   //     await sgMail.send(msg);
   //     this.logger.log(`✅ Email sent to ${email}`);
@@ -153,5 +153,5 @@ export class EmailService {
   //     'Confirmation code',
   //     `<h1>Your confirmation code: ${code}</h1>`
   //   );
-  // }
+  }
 }
