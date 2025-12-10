@@ -123,7 +123,7 @@ export class AuthService {
     user.setCode(newConfirmationCode, newExpirationDate);
     await this.usersRepository.save(user);
 
-    this.emailService
+    await this.emailService
       .sendConfirmationEmail(user.email, newConfirmationCode)
       .catch(console.error);
   }
