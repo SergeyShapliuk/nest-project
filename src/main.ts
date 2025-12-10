@@ -12,30 +12,31 @@ async function bootstrap() {
 
   appSetup(app); //глобальные настройки приложения
 
-  await app.listen(port);
+  const server = await app.listen(port);
+  server.setTimeout(60000); // 60s
 
   if (false) {
     try {
 
-      const tunnel = await localtunnel({
-        port,
-        subdomain: process.env.TUNNEL_SUBDOMAIN || 'your-app-name', // опционально
-      });
-
-      console.log('🌐 Public tunnel URL:', tunnel.url);
-      console.log('📡 Local server:', `http://localhost:${port}`);
-
-      // Обработка событий туннеля
-      tunnel.on('close', () => {
-        console.log('🔴 Tunnel closed');
-      });
-
-      tunnel.on('error', (err) => {
-        console.error('💥 Tunnel error:', err);
-      });
-
-      // Сохраняем ссылку на туннель (опционально)
-      (global as any).tunnel = tunnel;
+      // const tunnel = await localtunnel({
+      //   port,
+      //   subdomain: process.env.TUNNEL_SUBDOMAIN || 'your-app-name', // опционально
+      // });
+      //
+      // console.log('🌐 Public tunnel URL:', tunnel.url);
+      // console.log('📡 Local server:', `http://localhost:${port}`);
+      //
+      // // Обработка событий туннеля
+      // tunnel.on('close', () => {
+      //   console.log('🔴 Tunnel closed');
+      // });
+      //
+      // tunnel.on('error', (err) => {
+      //   console.error('💥 Tunnel error:', err);
+      // });
+      //
+      // // Сохраняем ссылку на туннель (опционально)
+      // (global as any).tunnel = tunnel;
 
       // console.log('🌐 Connecting to ngrok...');
       //
