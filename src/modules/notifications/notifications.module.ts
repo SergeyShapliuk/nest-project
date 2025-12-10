@@ -19,12 +19,12 @@ import { EmailService } from './email.service';
         return {
           transport: {
             // service: 'gmail',
-            host: 'smtp.yandex.ru',
+            host: 'smtp.yandex.by',
             port: 465, // или 587 для STARTTLS
             secure: true, // true для порта 465, false для 587
             auth: {
               // user: emailConfig.authMail ?? 'sergeshaplyuk@yandex.ru',//'sergeshapluk@gmail.com',
-              user: 'sergeshaplyuk@yandex.by',//'sergeshapluk@gmail.com',
+              user: 'sergeshaplyuk',//'sergeshapluk@gmail.com',
               // pass: emailConfig.authPass ?? 'umfqibewzgoagmlt'//'sevp snmt teqs uydm',
               pass: 'umfqibewzgoagmlt',//'sevp snmt teqs uydm',
             },
