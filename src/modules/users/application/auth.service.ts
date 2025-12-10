@@ -65,7 +65,7 @@ export class AuthService {
     user.setCode(confirmCode, newExpirationDate);
     await this.usersRepository.save(user);
 
-    this.emailService
+    await this.emailService
       .sendConfirmationEmail(user.email, confirmCode)
       .catch(console.error);
   }
