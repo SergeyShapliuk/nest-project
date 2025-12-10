@@ -19,21 +19,22 @@ import { EmailService } from './email.service';
         return {
           transport: {
             // service: 'gmail',
-            host: 'smtp.yandex.by',
-            port: 465, // или 587 для STARTTLS
-            secure: true, // true для порта 465, false для 587
+            host: 'smtp.sendgrid.net',
+            port: 587, // или 587 для STARTTLS
+            secure: false, // true для порта 465, false для 587
             auth: {
               // user: emailConfig.authMail ?? 'sergeshaplyuk@yandex.ru',//'sergeshapluk@gmail.com',
-              user: 'sergeshaplyuk',//'sergeshapluk@gmail.com',
+              user: 'apikey',
               // pass: emailConfig.authPass ?? 'umfqibewzgoagmlt'//'sevp snmt teqs uydm',
-              pass: 'umfqibewzgoagmlt',//'sevp snmt teqs uydm',
+              pass: emailConfig.sendGrid,
             },
             tls: {
               rejectUnauthorized: false,
             },
           },
           defaults: {
-            from: '"No reply" <sergeshaplyuk@yandex.by>',
+            from: '"No reply" <sergeshapluk.dev@gmail.com>',
+            replyTo: 'sergeshapluk.dev@gmail.com',
           },
         };
       },
