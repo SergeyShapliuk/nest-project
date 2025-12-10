@@ -18,17 +18,22 @@ import { EmailService } from './email.service';
 
         return {
           transport: {
-            service: 'gmail',
+            // service: 'gmail',
+            host: 'smtp.yandex.ru',
+            port: 465, // или 587 для STARTTLS
+            secure: true, // true для порта 465, false для 587
             auth: {
-              user: emailConfig.authMail ?? 'sergeshapluk@gmail.com',
-              pass: emailConfig.authPass ?? 'sevp snmt teqs uydm',
+              // user: emailConfig.authMail ?? 'sergeshaplyuk@yandex.ru',//'sergeshapluk@gmail.com',
+              user: 'sergeshaplyuk@yandex.by',//'sergeshapluk@gmail.com',
+              // pass: emailConfig.authPass ?? 'umfqibewzgoagmlt'//'sevp snmt teqs uydm',
+              pass: 'umfqibewzgoagmlt',//'sevp snmt teqs uydm',
             },
             tls: {
               rejectUnauthorized: false,
             },
           },
           defaults: {
-            from: '"No reply" <sergeshapluk@gmail.com>',
+            from: '"No reply" <sergeshaplyuk@yandex.by>',
           },
         };
       },
