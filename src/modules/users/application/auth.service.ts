@@ -88,7 +88,7 @@ export class AuthService {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'user is confirmed',
-        field:'email'
+        field:'code'
       });
     }
 

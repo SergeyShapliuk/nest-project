@@ -1,10 +1,8 @@
 // import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import sgMail from '@sendgrid/mail';
 import { MailerService } from '@nestjs-modules/mailer';
-import nodemailer from 'nodemailer';
-import tls from 'tls';
+
 
 
 @Injectable()
