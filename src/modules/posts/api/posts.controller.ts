@@ -17,7 +17,7 @@ import { PostViewDto } from './view-dto/posts.view-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
 import { PostsQwRepository } from '../infrastructure/query/posts.query.repository';
-import { ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { ApiBasicAuth, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { CreatePostInputDto } from './input-dto/posts.input-dto';
 import { UpdatePostInputDto } from './input-dto/update-post.input-dto';
 import { JwtOptionalAuthGuard } from '../../users/guards/bearer/jwt-optional-auth.guard';
@@ -38,6 +38,7 @@ import { use } from 'passport';
 import { UpdatePostLikeStatusCommand } from '../application/usecases/update-post-like-status.usecase';
 import { GetCommentQueryParams } from '../../coments/api/input-dto/comment-query.input';
 import { JwtAuthGuard } from '../../users/guards/bearer/jwt-auth.guard';
+import { BasicAuthGuard } from '../../users/guards/basic/basic-auth.guard';
 
 @Controller(POSTS_PATH)
 export class PostsController {
@@ -68,8 +69,8 @@ export class PostsController {
 
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Post()
   async createPost(@Body() body: CreatePostInputDto): Promise<PostViewDto> {
 
@@ -80,8 +81,8 @@ export class PostsController {
 
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updatePost(
@@ -93,8 +94,8 @@ export class PostsController {
   }
 
   @ApiParam({ name: 'id' }) //для сваггер
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(@Param('id') id: string): Promise<void> {
@@ -117,8 +118,8 @@ export class PostsController {
 
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Post('/:postId/comments')
   async createCommentByPost(@Param('postId') postId: string,
                             @Body() body: CommentCreateInputDto,
@@ -128,8 +129,8 @@ export class PostsController {
       CommentViewDto>(new CreateCommentByPostIdCommand(body, objectId, user?.id));
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Put('/:postId/like-status')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateLikeStatusPost(

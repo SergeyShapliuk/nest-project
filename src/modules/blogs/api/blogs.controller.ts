@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { BLOGS_PATH } from '../../../core/paths/paths';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
-import { ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { ApiBasicAuth, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { GetBlogsQueryParams } from './input-dto/get-blogs-query-params.input-dto';
 import { BlogViewDto } from './view-dto/blogs.view-dto';
 import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
@@ -38,6 +38,7 @@ import {
   GetPostsBlogByIdQueryHandler,
 } from '../application/queries/get-posts-blog-by-id.query-handler';
 import { JwtAuthGuard } from '../../users/guards/bearer/jwt-auth.guard';
+import { BasicAuthGuard } from '../../users/guards/basic/basic-auth.guard';
 
 @Controller(BLOGS_PATH)
 export class BlogsController {
@@ -82,8 +83,8 @@ export class BlogsController {
     return this.queryBus.execute(new GetBlogByIdQuery(blogObjectId, user?.id || null));
   }
 
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Post()
   async createBlog(@Body() body: CreateBlogInputDto): Promise<BlogViewDto> {
 
@@ -122,8 +123,8 @@ export class BlogsController {
 
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Post(':blogId/posts')
   async createPostByBlog(@Param('blogId') blogId: string, @Body() body: CreatePostByBlogInputDto): Promise<PostViewDto> {
     const postData = {
@@ -136,8 +137,8 @@ export class BlogsController {
     return this.commandBus.execute(new CreatePostByBlogIdCommand(postData));
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(
@@ -150,8 +151,8 @@ export class BlogsController {
   }
 
   @ApiParam({ name: 'id' }) //для сваггер
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteBlog(@Param('id') id: string): Promise<void> {

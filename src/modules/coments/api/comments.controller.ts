@@ -21,9 +21,10 @@ import { GetBlogByIdQuery } from '../../blogs/application/queries/get-blog-by-id
 import { UpdateCommentCommand } from '../application/usecases/update-comment.usecase';
 import { UpdateCommentLikeStatusCommand } from '../application/usecases/update-comment-like-status.usecase';
 import { DeleteCommentCommand } from '../application/usecases/delete-comment.usecase';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBasicAuth, ApiBearerAuth } from '@nestjs/swagger';
 import { ExtractUserIfExistsFromRequest } from '../../users/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 import { GetCommentByIdQuery } from '../application/usecases/queries/get-comment-by-id.query-handler';
+import { BasicAuthGuard } from '../../users/guards/basic/basic-auth.guard';
 
 @Controller(COMMENTS_PATH)
 export class CommentsController {
@@ -52,8 +53,8 @@ export class CommentsController {
 
   // PUT /comments/:id
   @Put(':id')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateComment(
     @Param('id') id: string,
@@ -66,8 +67,8 @@ export class CommentsController {
 
   // PUT /comments/:commentId/like-status
   @Put(':commentId/like-status')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateLikeStatus(
     @Param('commentId') commentId: string,
@@ -81,8 +82,8 @@ export class CommentsController {
 
   // DELETE /comments/:id
   @Delete(':id')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteComment(
     @Param('id') id: string,
