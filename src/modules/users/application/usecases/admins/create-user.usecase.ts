@@ -18,7 +18,7 @@ export class CreateUserUseCase
   implements ICommandHandler<CreateUserCommand, Types.ObjectId>
 {
   constructor(
-    @InjectModel(User.name)
+    // @InjectModel(User.name)
     private usersRepository: UsersRepository,
     private usersFactory: UsersFactory,
   ) {}

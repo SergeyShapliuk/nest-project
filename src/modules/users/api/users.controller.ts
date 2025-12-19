@@ -18,7 +18,7 @@ import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
 import { UsersQwRepository } from '../infrastructure/query/users.query.repository';
 import { CreateUserInputDto } from './input-dto/users.input-dto';
-import { ApiParam } from '@nestjs/swagger';
+import { ApiBasicAuth, ApiParam } from '@nestjs/swagger';
 import { Types } from 'mongoose';
 import { ObjectIdValidationPipe } from '../../../core/pipes/object-id-validation-transformation-pipe.service';
 import { Public } from '../guards/decorators/public.decorator';
@@ -56,6 +56,7 @@ export class UsersController {
   }
 
   @Post()
+  @ApiBasicAuth('basicAuth')
   @UseGuards(BasicAuthGuard)
   async createUser(@Body() body: CreateUserInputDto): Promise<UserViewDto> {
 

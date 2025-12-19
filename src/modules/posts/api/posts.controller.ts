@@ -63,7 +63,7 @@ export class PostsController {
   async getPostId(@Param('id') id: string,
                   @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<PostViewDto> {
     // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
-    console.log('getPostId', id);
+    console.log('getPostId', user);
     const objectId = new Types.ObjectId(id);
     return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(new GetPostByIdQuery(objectId, user?.id || undefined));
 
