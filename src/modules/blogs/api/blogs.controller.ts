@@ -82,8 +82,8 @@ export class BlogsController {
     return this.queryBus.execute(new GetBlogByIdQuery(blogObjectId, user?.id || null));
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard)
   @Post()
   async createBlog(@Body() body: CreateBlogInputDto): Promise<BlogViewDto> {
 
