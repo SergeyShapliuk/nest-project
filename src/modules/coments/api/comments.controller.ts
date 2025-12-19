@@ -81,6 +81,7 @@ export class CommentsController {
 
   // DELETE /comments/:id
   @Delete(':id')
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteComment(

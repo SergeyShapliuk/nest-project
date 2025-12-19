@@ -6,6 +6,7 @@ import { DomainExceptionCode } from '../../../../core/exceptions/domain-exceptio
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
   handleRequest(err, user) {
+    console.log('JwtAuthGuard', err, user);
     if (err || !user) {
       // здесь можно выбросить любую свою ошибку
       throw new DomainException({

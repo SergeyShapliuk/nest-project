@@ -24,11 +24,11 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
 
   async execute({ dto }: LoginUserCommand): Promise<{ accessToken: string, refreshToken: string }> {
     const accessToken = this.accessTokenContext.sign({
-      id: dto.userId,
+      id: dto.userId.toString(),
     });
 
     const refreshToken = this.refreshTokenContext.sign({
-      id: dto.userId,
+      id: dto.userId.toString(),
       deviceId: 'deviceId',
     });
 

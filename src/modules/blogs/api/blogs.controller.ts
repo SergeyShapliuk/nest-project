@@ -37,6 +37,7 @@ import {
   GetPostsBlogByIdQuery,
   GetPostsBlogByIdQueryHandler,
 } from '../application/queries/get-posts-blog-by-id.query-handler';
+import { JwtAuthGuard } from '../../users/guards/bearer/jwt-auth.guard';
 
 @Controller(BLOGS_PATH)
 export class BlogsController {
@@ -82,7 +83,7 @@ export class BlogsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post()
   async createBlog(@Body() body: CreateBlogInputDto): Promise<BlogViewDto> {
 
@@ -122,7 +123,7 @@ export class BlogsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post(':blogId/posts')
   async createPostByBlog(@Param('blogId') blogId: string, @Body() body: CreatePostByBlogInputDto): Promise<PostViewDto> {
     const postData = {
@@ -136,7 +137,7 @@ export class BlogsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(
@@ -150,7 +151,7 @@ export class BlogsController {
 
   @ApiParam({ name: 'id' }) //для сваггер
   @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteBlog(@Param('id') id: string): Promise<void> {

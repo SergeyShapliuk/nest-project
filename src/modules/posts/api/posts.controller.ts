@@ -37,6 +37,7 @@ import { CreateCommentByPostIdCommand } from '../application/usecases/create-com
 import { use } from 'passport';
 import { UpdatePostLikeStatusCommand } from '../application/usecases/update-post-like-status.usecase';
 import { GetCommentQueryParams } from '../../coments/api/input-dto/comment-query.input';
+import { JwtAuthGuard } from '../../users/guards/bearer/jwt-auth.guard';
 
 @Controller(POSTS_PATH)
 export class PostsController {
@@ -68,7 +69,7 @@ export class PostsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post()
   async createPost(@Body() body: CreatePostInputDto): Promise<PostViewDto> {
 
@@ -80,7 +81,7 @@ export class PostsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updatePost(
@@ -93,7 +94,7 @@ export class PostsController {
 
   @ApiParam({ name: 'id' }) //для сваггер
   @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(@Param('id') id: string): Promise<void> {
@@ -117,7 +118,7 @@ export class PostsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post('/:postId/comments')
   async createCommentByPost(@Param('postId') postId: string,
                             @Body() body: CommentCreateInputDto,
@@ -128,7 +129,7 @@ export class PostsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Put('/:postId/like-status')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateLikeStatusPost(
