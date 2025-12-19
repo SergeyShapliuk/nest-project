@@ -1,6 +1,6 @@
-import { CreateBlogInputDto } from './blogs.input-dto';
 import { IsString } from 'class-validator';
 import { Trim } from '../../../../core/decorators/transform/trim';
+import { CreateBlogInputDto } from './create-blog.input-dto';
 
 export class UpdateBlogInputDto implements CreateBlogInputDto {
   @IsString()

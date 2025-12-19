@@ -5,7 +5,7 @@ import type { PostModelType } from '../../domain/post.entity';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
 import { PostViewDto } from '../../api/view-dto/posts.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { FilterQuery } from 'mongoose';
+import { FilterQuery, Types } from 'mongoose';
 import { PostsLikeRepository } from '../posts.like.repository';
 
 @Injectable()
@@ -16,7 +16,7 @@ export class PostsQwRepository {
   ) {
   }
 
-  async getByIdOrNotFoundFail(id: string, userId?: string): Promise<PostViewDto> {
+  async getByIdOrNotFoundFail(id: Types.ObjectId, userId?: Types.ObjectId): Promise<PostViewDto> {
     const post = await this.PostModel.findOne({
       _id: id,
       deletedAt: null,
@@ -26,8 +26,8 @@ export class PostsQwRepository {
       throw new NotFoundException('post not found');
     }
     const [myStatus, newestLikes] = await Promise.all([
-      this.postsLikeRepository.getUserPostLikeStatus(id, userId),
-      this.postsLikeRepository.getPostNewestLikes(id),
+      this.postsLikeRepository.getUserPostLikeStatus(id.toString(), userId?.toString()),
+      this.postsLikeRepository.getPostNewestLikes(id.toString()),
     ]);
     return PostViewDto.mapToView(post, myStatus, newestLikes);
   }

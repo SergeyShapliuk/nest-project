@@ -1,16 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UsersRepository } from '../infrastructure/users.repository';
+import { UsersRepository } from '../../infrastructure/users.repository';
 import { JwtService } from '@nestjs/jwt';
-import { UserContextDto } from '../guards/dto/user-context.dto';
+import { UserContextDto } from '../../guards/dto/user-context.dto';
 import { CryptoService } from './crypto.service';
 import { randomUUID } from 'crypto';
-import { EmailService } from '../../notifications/email.service';
-import { CreateUserDto } from '../dto/create-user.dto';
+import { EmailService } from '../../../notifications/email.service';
+import { CreateUserDto } from '../../dto/create-user.dto';
 import { Types } from 'mongoose';
 import { UserService } from './user.service';
 import bcrypt from 'bcrypt';
-import { DomainException } from '../../../core/exceptions/domain-exceptions';
-import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
+import { DomainException } from '../../../../core/exceptions/domain-exceptions';
+import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
 
 @Injectable()
 export class AuthService {
@@ -29,7 +29,10 @@ export class AuthService {
   ): Promise<UserContextDto | null> {
     const user = await this.usersRepository.findByLogin(login);
     if (!user) {
-      return null;
+      throw new DomainException({
+        code: DomainExceptionCode.Unauthorized,
+        message: 'Unauthorized',
+      });
     }
 
     const isPasswordValid = await this.cryptoService.comparePasswords({
@@ -38,37 +41,40 @@ export class AuthService {
     });
 
     if (!isPasswordValid) {
-      return null;
+      throw new DomainException({
+        code: DomainExceptionCode.Unauthorized,
+        message: 'Unauthorized',
+      });
     }
 
     return { id: user.id.toString() };
   }
 
-  async login(userId: string) {
-    const accessToken = this.jwtService.sign({ id: userId } as UserContextDto);
+  // async login(userId: string) {
+  //   const accessToken = this.jwtService.sign({ id: userId } as UserContextDto);
+  //
+  //   return {
+  //     accessToken,
+  //   };
+  // }
 
-    return {
-      accessToken,
-    };
-  }
-
-  async registerUser(dto: CreateUserDto) {
-    const createdUserId = await this.userService.createUser(dto);
-
-    const user = await this.usersRepository.findOrNotFoundFail(
-      new Types.ObjectId(createdUserId).toString(),
-    );
-    console.log('registerUserFind:', user);
-    const confirmCode = randomUUID();
-    const newExpirationDate = new Date(Date.now() + 5 * 60 * 1000);
-    console.log('confirmCode:', confirmCode);
-    user.setCode(confirmCode, newExpirationDate);
-    await this.usersRepository.save(user);
-
-    await this.emailService
-      .sendConfirmationEmail(user.email, confirmCode)
-      .catch(console.error);
-  }
+  // async registerUser(dto: CreateUserDto) {
+  //   const createdUserId = await this.userService.createUser(dto);
+  //
+  //   const user = await this.usersRepository.findOrNotFoundFail(
+  //     new Types.ObjectId(createdUserId).toString(),
+  //   );
+  //   console.log('registerUserFind:', user);
+  //   const confirmCode = randomUUID();
+  //   const newExpirationDate = new Date(Date.now() + 5 * 60 * 1000);
+  //   console.log('confirmCode:', confirmCode);
+  //   user.setCode(confirmCode, newExpirationDate);
+  //   await this.usersRepository.save(user);
+  //
+  //   await this.emailService
+  //     .sendConfirmationEmail(user.email, confirmCode)
+  //     .catch(console.error);
+  // }
 
   async confirmCode(code: string) {
     console.log('confirmCode:', { code });

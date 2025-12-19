@@ -5,7 +5,7 @@ import type { UserModelType } from '../../domain/user.entity';
 import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params.input-dto';
 import { UserViewDto } from '../../api/view-dto/users.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { FilterQuery } from 'mongoose';
+import { FilterQuery ,Types} from 'mongoose';
 
 @Injectable()
 export class UsersQwRepository {
@@ -14,7 +14,7 @@ export class UsersQwRepository {
   ) {
   }
 
-  async getByIdOrNotFoundFail(id: string): Promise<UserViewDto> {
+  async getByIdOrNotFoundFail(id: Types.ObjectId): Promise<UserViewDto> {
     const user = await this.UserModel.findOne({
       _id: id,
       deletedAt: null,

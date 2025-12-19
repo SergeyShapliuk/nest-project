@@ -6,8 +6,7 @@ import { Post } from '../domain/post.entity';
 import type { PostModelType } from '../domain/post.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
-import { UpdateBlogDto } from '../../blogs/dto/update-blog.dto';
-import { UpdatePostDto } from '../dto/update-post.dto';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class PostsService {
@@ -26,7 +25,7 @@ export class PostsService {
   // }
 
   async createPost(dto: CreatePostDto): Promise<string> {
-    const blog = await this.blogsRepository.findOrNotFoundFail(dto.blogId);
+    const blog = await this.blogsRepository.findOrNotFoundFail(new Types.ObjectId(dto.blogId));
 
     console.log('createPost blogname', blog);
 
@@ -44,22 +43,15 @@ export class PostsService {
     return post._id.toString();
   }
 
-  async updatePost(id: string, dto: UpdatePostDto) {
-    const post = await this.postsRepository.findOrNotFoundFail(id);
-
-    // не присваиваем св-ва сущностям напрямую в сервисах! даже для изменения одного св-ва
-    // создаём метод
-    post.updatePost(dto); // change detection
-
-    // await this.blogsRepository.save(blog);
-
-    await this.postsRepository.save(post);
-  }
-
-  async deletePost(id: string) {
-    const post = await this.postsRepository.findOrNotFoundFail(id);
-    post.makeDeleted();
-
-    await this.postsRepository.save(post);
-  }
+  // async findCommentsByPost(
+  //   paginationDto: GetPostsQueryParams,
+  //   postId: string,
+  //   userId?: string
+  // ): Promise<{ items: WithId<Comment>[]; totalCount: number }> {
+  //   const post = await this.postsRepository.findByIdOrFail(postId);
+  //   return this.postsRepository.findCommentsByPost(
+  //     paginationDto,
+  //     post._id.toString()
+  //   );
+  // }
 }

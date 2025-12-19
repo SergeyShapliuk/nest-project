@@ -5,11 +5,11 @@ import {
   UseGuards,
   Get,
   HttpCode,
-  HttpStatus,
+  HttpStatus, Res, Req,
 } from '@nestjs/common';
-import { UserService } from '../application/user.service';
+import type { Request, Response } from 'express';
 import { CreateUserInputDto } from './input-dto/users.input-dto';
-import { AuthService } from '../application/auth.service';
+import { AuthService } from '../application/services/auth.service';
 import { ExtractUserFromRequest } from '../guards/decorators/param/extract-user-from-request.decorator';
 import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { Nullable, UserContextDto } from '../guards/dto/user-context.dto';
@@ -23,11 +23,14 @@ import { LocalAuthGuard } from '../guards/local/local-auth.guard';
 import { UpdateUserInputDto } from './input-dto/update-user.input-dto';
 import { CodeInputDto } from './input-dto/code.input-dto';
 import { NewPasswordUserInputDto } from './input-dto/new-password-user.input-dto';
+import { CommandBus } from '@nestjs/cqrs';
+import { LoginUserCommand } from '../application/usecases/login-user.usecase';
+import { RegisterUserCommand } from '../application/usecases/users/register-user.usecase';
 
 @Controller(AUTH_PATH)
 export class AuthController {
   constructor(
-    // private userService: UserService,
+    private commandBus: CommandBus,
     private authService: AuthService,
     private authQueryRepository: AuthQueryRepository,
   ) {
@@ -37,13 +40,15 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   me(@ExtractUserFromRequest() user: UserContextDto): Promise<MeViewDto> {
+    // console.log('cookies', request.cookies);
     return this.authQueryRepository.me(user.id);
   }
 
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
   registration(@Body() body: CreateUserInputDto): Promise<void> {
-    return this.authService.registerUser(body);
+    // return this.authService.registerUser(body);
+    return this.commandBus.execute(new RegisterUserCommand(body));
   }
 
   @Post('login')
@@ -59,12 +64,26 @@ export class AuthController {
       },
     },
   })
-  login(
+  async login(
     // @Request() req: any
     @ExtractUserFromRequest() user: UserContextDto,
+    @Res({ passthrough: true }) response: Response,
   ): Promise<{ accessToken: string }> {
     console.log('login:', user.id);
-    return this.authService.login(user.id);
+    // return this.authService.login(user.id);
+    const { accessToken, refreshToken } = await this.commandBus.execute(
+      new LoginUserCommand({ userId: user.id }),
+    );
+    // Устанавливаем refresh token в httpOnly cookie
+    response.cookie('refreshToken', refreshToken, {
+      httpOnly: true, // Не доступен через JavaScript (защита от XSS)
+      secure: true,
+      sameSite: 'strict', // Защита от CSRF
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней в миллисекундах
+      path: '/', // Доступен для всех путей или '/auth/refresh' если нужно ограничить
+      // domain: '.yourdomain.com', // Если используете поддомены
+    });
+    return { accessToken };
   }
 
   @Post('registration-confirmation')

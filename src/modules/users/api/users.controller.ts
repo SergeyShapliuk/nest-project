@@ -11,7 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { UserService } from '../application/user.service';
+import { UserService } from '../application/services/user.service';
 import { USERS_PATH } from '../../../core/paths/paths';
 import { UserViewDto } from './view-dto/users.view-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
@@ -25,19 +25,26 @@ import { Public } from '../guards/decorators/public.decorator';
 import { UpdateUserInputDto } from './input-dto/update-user.input-dto';
 import { LocalAuthGuard } from '../guards/local/local-auth.guard';
 import { BasicAuthGuard } from '../guards/basic/basic-auth.guard';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { GetUserByIdQuery } from '../application/queries/get-user-by-id.query';
+import { CreateUserCommand } from '../application/usecases/admins/create-user.usecase';
+import { UpdateUserCommand } from '../application/usecases/update-user.usecase';
+import { DeleteUserCommand } from '../application/usecases/admins/delete-user.usecase';
 
 @Controller(USERS_PATH)
 export class UsersController {
-  constructor(private userService: UserService,
-              private usersQwRepository: UsersQwRepository) {
+  constructor(private usersQwRepository: UsersQwRepository,
+              private readonly commandBus: CommandBus,
+              private readonly queryBus: QueryBus) {
   }
 
   @ApiParam({ name: 'id' }) //для сваггера
   @Get(':id')
   async getById(
-    @Param('id', ObjectIdValidationPipe) id: string,
+    @Param('id', ObjectIdValidationPipe) id: Types.ObjectId,
   ): Promise<UserViewDto> {
-    return this.usersQwRepository.getByIdOrNotFoundFail(id);
+    // return this.usersQwRepository.getByIdOrNotFoundFail(id);
+    return this.queryBus.execute(new GetUserByIdQuery(id));
   }
 
   @Public()
@@ -52,7 +59,9 @@ export class UsersController {
   @UseGuards(BasicAuthGuard)
   async createUser(@Body() body: CreateUserInputDto): Promise<UserViewDto> {
 
-    const createdUserId = await this.userService.createUser(body);
+    // const createdUserId = await this.userService.createUser(body);
+    const createdUserId = await this.commandBus.execute<CreateUserCommand,
+      Types.ObjectId>(new CreateUserCommand(body));
 
     return this.usersQwRepository.getByIdOrNotFoundFail(createdUserId);
 
@@ -64,18 +73,21 @@ export class UsersController {
     @Param('id') id: Types.ObjectId,
     @Body() body: UpdateUserInputDto,
   ): Promise<UserViewDto> {
-    // const userId = await this.userService.updateUser(id, body);
+    await this.commandBus.execute<UpdateUserCommand, void>(
+      new UpdateUserCommand(id, body),
+    );
 
-    return this.usersQwRepository.getByIdOrNotFoundFail('userId');
+    return this.usersQwRepository.getByIdOrNotFoundFail(id);
   }
 
   @ApiParam({ name: 'id' }) //для сваггер
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(BasicAuthGuard)
-  async deleteUser(@Param('id') id: string): Promise<void> {
+  async deleteUser(@Param('id', ObjectIdValidationPipe) id: Types.ObjectId): Promise<void> {
 
-    return this.userService.deleteUser(id);
+    // return this.userService.deleteUser(id);
+    return this.commandBus.execute(new DeleteUserCommand(id));
   }
 
 }

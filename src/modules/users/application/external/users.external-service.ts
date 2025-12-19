@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from '../domain/user.entity';
-import type { UserModelType } from '../domain/user.entity';
-import { UsersRepository } from '../infrastructure/users.repository';
+import { User } from '../../domain/user.entity';
+import type { UserModelType } from '../../domain/user.entity';
+import { UsersRepository } from '../../infrastructure/users.repository';
 import { Types } from 'mongoose';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class UsersExternalService {
   ) {
   }
 
-  async makeUserAsSpammer(userId: string) {
+  async makeUserAsSpammer(userId: Types.ObjectId) {
     const user = await this.usersRepository.findOrNotFoundFail(userId);
 
     // user.makeSpammer();

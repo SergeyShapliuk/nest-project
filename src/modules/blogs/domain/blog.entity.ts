@@ -90,7 +90,7 @@ export class Blog {
     this.deletedAt = new Date();
   }
 
-  updateBlog(dto:UpdateBlogDto) {
+  update(dto:UpdateBlogDto) {
     if (dto.name !== this.name) {
       this.name = dto.name;
     }

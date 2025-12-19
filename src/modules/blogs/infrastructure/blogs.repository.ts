@@ -11,16 +11,16 @@ export class BlogsRepository {
   }
 
 
-  async findById(id: string): Promise<BlogDocument | null> {
+  async findById(id: Types.ObjectId): Promise<BlogDocument | null> {
     console.log('id', id);
     return this.BlogModel.findOne({ _id: id, deletedAt: null });
   }
 
-  async save(newUser: BlogDocument) {
-    await newUser.save();
+  async save(newBlog: BlogDocument) {
+    await newBlog.save();
   }
 
-  async findOrNotFoundFail(id: string): Promise<BlogDocument> {
+  async findOrNotFoundFail(id: Types.ObjectId): Promise<BlogDocument> {
     const blog = await this.findById(id);
 
     if (!blog) {

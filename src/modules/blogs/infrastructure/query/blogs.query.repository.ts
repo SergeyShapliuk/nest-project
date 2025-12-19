@@ -5,7 +5,7 @@ import type { BlogModelType } from '../../domain/blog.entity';
 import { GetBlogsQueryParams } from '../../api/input-dto/get-blogs-query-params.input-dto';
 import { BlogViewDto } from '../../api/view-dto/blogs.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { FilterQuery } from 'mongoose';
+import { FilterQuery, Types } from 'mongoose';
 
 
 @Injectable()
@@ -15,7 +15,7 @@ export class BlogsQwRepository {
   ) {
   }
 
-  async getByIdOrNotFoundFail(id: string): Promise<BlogViewDto> {
+  async getByIdOrNotFoundFail(id: Types.ObjectId): Promise<BlogViewDto> {
     const blog = await this.BlogModel.findOne({
       _id: id,
       deletedAt: null,

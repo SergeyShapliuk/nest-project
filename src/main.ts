@@ -3,11 +3,14 @@ import { AppModule } from './app.module';
 import { appSetup } from './setup/app.setup';
 import localtunnel from 'localtunnel';
 import ngrok from 'ngrok';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
+
   const app = await NestFactory.create(AppModule);
   const port = parseInt(process.env.PORT || '5001', 10);
 
+  app.use(cookieParser());
   app.enableCors();
 
   appSetup(app); //глобальные настройки приложения

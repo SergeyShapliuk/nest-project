@@ -1,14 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { PostLike, PostLikeDocument } from '../domain/post.like.entity';
 import type { PostLikeModelType } from '../domain/post.like.entity';
 import { PostLikeViewDto } from '../api/view-dto/posts.like.view-dto';
+import type { PostModelType } from '../domain/post.entity';
+import { Post } from '../domain/post.entity';
 
 
 @Injectable()
 export class PostsLikeRepository {
-  constructor(@InjectModel(PostLike.name) private PostLikeModel: PostLikeModelType) {
+  constructor(@InjectModel(Post.name)
+              private PostModel: PostModelType,
+              @InjectModel(PostLike.name)
+              private PostLikeModel: PostLikeModelType,
+  ) {
   }
 
 
@@ -41,7 +47,7 @@ export class PostsLikeRepository {
 
   async getUserPostLikeStatuses(
     postIds: string[],
-    userId?: string
+    userId?: string,
   ): Promise<Record<string, 'Like' | 'Dislike' | 'None'>> {
     if (!userId || postIds.length === 0) {
       // Возвращаем 'None' для всех постов
@@ -86,7 +92,7 @@ export class PostsLikeRepository {
   }
 
   async getPostsNewestLikes(
-    postIds: string[]
+    postIds: string[],
   ): Promise<Record<string, PostLikeViewDto[]>> {
     if (postIds.length === 0) return {};
 
@@ -95,7 +101,7 @@ export class PostsLikeRepository {
     // ОДИН запрос для всех постов!
     const allLikes = await this.PostLikeModel.find({
       postId: { $in: postIds },
-      status: 'Like'
+      status: 'Like',
     })
       .sort({ createdAt: -1 })
       .select({ userId: 1, login: 1, createdAt: 1, postId: 1, _id: 0 })
@@ -126,6 +132,62 @@ export class PostsLikeRepository {
 
     console.log('Сгруппированные лайки:', grouped);
     return grouped;
+  }
+
+  async updateLikeStatus(
+    postId: string,
+    userId: string,
+    login: string,
+    likeStatus: 'Like' | 'Dislike' | 'None',
+  ): Promise<void> {
+    const current = await this.PostLikeModel.findOne({ userId, postId });
+
+    // Если статус не изменился — ничего не делать
+    if (current?.status === likeStatus) {
+      return;
+    }
+
+    // Удаляем предыдущую реакцию если была
+    if (current) {
+      await this.PostLikeModel.deleteOne({ userId, postId });
+
+      // Уменьшаем счетчик предыдущей реакции
+      if (current.status === 'Like') {
+        await this.PostModel.updateOne(
+          { _id: postId },
+          { $inc: { 'extendedLikesInfo.likesCount': -1 } },
+        );
+      } else if (current.status === 'Dislike') {
+        await this.PostModel.updateOne(
+          { _id: postId },
+          { $inc: { 'extendedLikesInfo.dislikesCount': -1 } },
+        );
+      }
+    }
+
+    // Добавляем новую реакцию если не "None"
+    if (likeStatus !== 'None') {
+      await this.PostLikeModel.create({
+        userId,
+        postId,
+        login,
+        status: likeStatus, // ✅ ДОБАВИТЬ статус
+        createdAt: new Date().toISOString(),
+      });
+
+      // Увеличиваем счетчик новой реакции
+      if (likeStatus === 'Like') {
+        await this.PostModel.updateOne(
+          { _id: postId },
+          { $inc: { 'extendedLikesInfo.likesCount': 1 } },
+        );
+      } else if (likeStatus === 'Dislike') {
+        await this.PostModel.updateOne(
+          { _id: postId },
+          { $inc: { 'extendedLikesInfo.dislikesCount': 1 } },
+        );
+      }
+    }
   }
 
 }
