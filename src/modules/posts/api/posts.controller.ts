@@ -38,6 +38,7 @@ import { UpdatePostLikeStatusCommand } from '../application/usecases/update-post
 import { GetCommentQueryParams } from '../../coments/api/input-dto/comment-query.input';
 import { JwtAuthGuard } from '../../users/guards/bearer/jwt-auth.guard';
 import { BasicAuthGuard } from '../../users/guards/basic/basic-auth.guard';
+import { UpdateLikeStatusDto } from './input-dto/update-like-status.input-dto';
 
 @Controller(POSTS_PATH)
 export class PostsController {
@@ -135,7 +136,7 @@ export class PostsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateLikeStatusPost(
     @Param('postId') postId: string,
-    @Body() body: { likeStatus: 'None' | 'Like' | 'Dislike' },
+    @Body() body: UpdateLikeStatusDto,
     @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
   ): Promise<void> {
     const objectId = new Types.ObjectId(postId);

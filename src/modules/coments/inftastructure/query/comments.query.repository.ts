@@ -6,15 +6,17 @@ import { CommentViewDto } from '../../api/view-dto/comments.view-dto';
 import { GetCommentQueryParams } from '../../api/input-dto/comment-query.input';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { Comment } from '../../domain/comment.entity';
+import { CommentLikeRepository } from '../comment.like.repository';
 
 @Injectable()
 export class CommentsQwRepository {
   constructor(
     @InjectModel(Comment.name) private CommentModel: CommentModelType,
+    private commentLikeRepository: CommentLikeRepository,
   ) {
   }
 
-  async getByIdOrNotFoundFail(id: Types.ObjectId): Promise<CommentViewDto> {
+  async getByIdOrNotFoundFail(id: Types.ObjectId, userId?: string): Promise<CommentViewDto> {
     const comment = await this.CommentModel.findOne({
       _id: id,
       deletedAt: null,
@@ -23,13 +25,19 @@ export class CommentsQwRepository {
     if (!comment) {
       throw new NotFoundException('comment not found');
     }
-
-    return CommentViewDto.mapToView(comment);
+    console.log('userId', userId);
+    let myStatus: 'None' | 'Like' | 'Dislike' = 'None';
+    if (userId) {
+      myStatus = await this.commentLikeRepository.getUserLikeStatus(comment._id.toString(), userId) || 'None';
+    }
+    console.log('myStatus', myStatus);
+    return CommentViewDto.mapToView(comment, myStatus);
   }
 
   async getAll(
     queryDto: GetCommentQueryParams,
     postId: string,
+    userId?: string,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
     const {
       pageNumber,
@@ -81,7 +89,16 @@ export class CommentsQwRepository {
       .exec();
 
     const totalCount = await this.CommentModel.countDocuments(filter);
-    const items = comments.map(CommentViewDto.mapToView);
+    // Получаем myStatus для каждого комментария (асинхронно)
+    const items: CommentViewDto[] = [];
+    for (const comment of comments) {
+      let myStatus: 'None' | 'Like' | 'Dislike' = 'None';
+      if (userId) {
+        myStatus = (await this.commentLikeRepository.getUserLikeStatus(comment._id.toString(), userId)) || 'None';
+      }
+      items.push(CommentViewDto.mapToView(comment, myStatus));
+    }
+    // const items = comments.map(CommentViewDto.mapToView);
 
     return PaginatedViewDto.mapToView({
       items,

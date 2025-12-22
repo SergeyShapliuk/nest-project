@@ -10,30 +10,31 @@ import { DomainExceptionCode } from '../../../../../core/exceptions/domain-excep
 export class GetCommentByIdQuery {
   constructor(
     public id: Types.ObjectId,
-    public userId: Types.ObjectId | null,
-  ) {}
+    public userId?: Types.ObjectId | undefined,
+  ) {
+  }
 }
 
 @QueryHandler(GetCommentByIdQuery)
 export class GetCommentBlogByIdQueryHandler
-  implements IQueryHandler<GetCommentByIdQuery, CommentViewDto>
-{
+  implements IQueryHandler<GetCommentByIdQuery, CommentViewDto> {
   constructor(
     @Inject(CommentsQwRepository)
     private readonly commentsQwRepository: CommentsQwRepository,
     private readonly commentRepository: CommentRepository,
-  ) {}
+  ) {
+  }
 
   async execute(query: GetCommentByIdQuery): Promise<CommentViewDto> {
     const comment = await this.commentRepository.findByIdOrFail(query.id);
 
-      if (!comment) {
-        throw new DomainException({
-          code: DomainExceptionCode.NotFound,
-          message: 'Comment not found',
-        });
-      }
+    if (!comment) {
+      throw new DomainException({
+        code: DomainExceptionCode.NotFound,
+        message: 'Comment not found',
+      });
+    }
 
-    return this.commentsQwRepository.getByIdOrNotFoundFail(query.id);
+    return this.commentsQwRepository.getByIdOrNotFoundFail(query.id, query?.userId?.toString());
   }
 }

@@ -15,7 +15,7 @@ export class CommentViewDto {
     myStatus: 'None' | 'Like' | 'Dislike';
   };
 
-  static mapToView(comment: CommentDocument): CommentViewDto {
+  static mapToView(comment: CommentDocument, myStatus: 'None' | 'Like' | 'Dislike' = 'None'): CommentViewDto {
 
     // const myStatus = await commentLikeRepository.getUserLikeStatus(
     //   comment?._id.toString() || '',
@@ -34,7 +34,7 @@ export class CommentViewDto {
       dto.likesInfo = {
         likesCount: comment.likesInfo?.likesCount || 0,
         dislikesCount: comment.likesInfo?.dislikesCount || 0,
-        myStatus: 'None',
+        myStatus,
 
       };
 

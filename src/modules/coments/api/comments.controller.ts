@@ -43,11 +43,12 @@ export class CommentsController {
   @UseGuards(JwtOptionalAuthGuard)
   async getComment(
     @Param('id') id: string,
-    @ExtractUserFromRequest() user: UserContextDto,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ) {
     const objectId = new Types.ObjectId(id);
+    console.log('getComments UserId', user?.id);
     // return this.commentQwRepository.getByIdOrNotFoundFail(id);
-    return this.queryBus.execute(new GetCommentByIdQuery(objectId, user?.id || null));
+    return this.queryBus.execute(new GetCommentByIdQuery(objectId, user?.id));
 
   }
 
