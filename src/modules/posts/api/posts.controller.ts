@@ -115,7 +115,7 @@ export class PostsController {
     // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
     console.log('getPostId', postId);
     const objectId = new Types.ObjectId(postId);
-    return this.queryBus.execute<GetCommentsByPostIdQuery, PaginatedViewDto<CommentViewDto[]>>(new GetCommentsByPostIdQuery(query, objectId, user?.id || undefined));
+    return this.queryBus.execute<GetCommentsByPostIdQuery, PaginatedViewDto<CommentViewDto[]>>(new GetCommentsByPostIdQuery(query, objectId, user?.id));
 
   }
 

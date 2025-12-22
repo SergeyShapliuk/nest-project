@@ -28,6 +28,6 @@ export class GetCommentsByPostIdHandler
     console.log('GetBlogByIdQueryHandler', query);
     await this.postsRepository.findOrNotFoundFail(query.postId);
 
-    return this.commentsQwRepository.getAll(query.queryParams, query.postId.toString());
+    return this.commentsQwRepository.getAll(query.queryParams, query.postId.toString(), query?.userId?.toString());
   }
 }

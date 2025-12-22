@@ -25,6 +25,7 @@ import { ApiBasicAuth, ApiBearerAuth } from '@nestjs/swagger';
 import { ExtractUserIfExistsFromRequest } from '../../users/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 import { GetCommentByIdQuery } from '../application/usecases/queries/get-comment-by-id.query-handler';
 import { BasicAuthGuard } from '../../users/guards/basic/basic-auth.guard';
+import { UpdateLikeStatusDto } from '../../posts/api/input-dto/update-like-status.input-dto';
 
 @Controller(COMMENTS_PATH)
 export class CommentsController {
@@ -54,8 +55,8 @@ export class CommentsController {
 
   // PUT /comments/:id
   @Put(':id')
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateComment(
     @Param('id') id: string,
@@ -73,7 +74,7 @@ export class CommentsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateLikeStatus(
     @Param('commentId') commentId: string,
-    @Body() body: { likeStatus: string },
+    @Body() body: UpdateLikeStatusDto,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<void> {
     const objectId = new Types.ObjectId(commentId);

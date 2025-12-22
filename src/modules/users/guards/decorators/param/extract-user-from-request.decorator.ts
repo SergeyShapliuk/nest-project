@@ -7,6 +7,7 @@ export const ExtractUserFromRequest = createParamDecorator(
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
+    console.log('user', user);
     console.log('cookies', request.cookies.refreshToken);
     if (!user) {
       throw new Error('there is no user in the request object!');
