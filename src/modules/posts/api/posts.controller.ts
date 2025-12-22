@@ -129,8 +129,8 @@ export class PostsController {
       CommentViewDto>(new CreateCommentByPostIdCommand(body, objectId, user?.id));
   }
 
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtOptionalAuthGuard)
   @Put('/:postId/like-status')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateLikeStatusPost(
