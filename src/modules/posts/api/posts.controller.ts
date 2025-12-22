@@ -130,7 +130,7 @@ export class PostsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Put('/:postId/like-status')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateLikeStatusPost(
