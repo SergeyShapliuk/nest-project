@@ -4,9 +4,11 @@ import { PostViewDto } from '../../api/view-dto/posts.view-dto';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { PostsQwRepository } from '../../infrastructure/query/posts.query.repository';
+import { Types } from 'mongoose';
 
 export class GetPostsQuery {
-  constructor(public queryParams: GetPostsQueryParams) {
+  constructor(public queryParams: GetPostsQueryParams,
+              public userId?: Types.ObjectId | undefined) {
   }
 }
 
@@ -22,6 +24,6 @@ export class GetPostsQueryHandler
   async execute(
     query: GetPostsQuery,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    return this.postsQwRepository.getAll(query.queryParams);
+    return this.postsQwRepository.getAll(query.queryParams, query.userId?.toString());
   }
 }

@@ -1,4 +1,4 @@
-import { IsEmail, IsString, Length } from 'class-validator';
+import { IsDefined, IsEmail, IsString, Length } from 'class-validator';
 import { Trim } from '../../../../core/decorators/transform/trim';
 import {
   loginConstraints,
@@ -11,23 +11,25 @@ import { IsStringWithTrim } from '../../../../core/decorators/validation/is-stri
 
 //dto для боди при создании юзера. Сюда могут быть добавлены декораторы swagger
 export class CreatePostInputDto {
-  @IsString()
+  @IsDefined({ message: 'title is required' })
+  @IsString({ message: 'title must be a string' })
+  @Length(1, 30, { message: 'title must be between 1 and 30 characters' })
+  @Trim()
   title: string;
 
-  @IsString()
-  // @Length(passwordConstraints.minLength, passwordConstraints.maxLength)
+  @IsDefined({ message: 'shortDescription is required' })
+  @IsString({ message: 'shortDescription must be a string' })
+  @Length(1, 100, { message: 'shortDescription must be between 1 and 100 characters' })
   @Trim()
   shortDescription: string;
 
-  @IsString()
-  // @IsEmail()
-  // @Matches(emailConstraints.match)
+  @IsDefined({ message: 'content is required' })
+  @IsString({ message: 'content must be a string' })
+  @Length(1, 1000, { message: 'content must be between 1 and 1000 characters' })
   @Trim()
   content: string;
 
-  @IsString()
-  // @IsEmail()
-  // @Matches(emailConstraints.match)
-  @Trim()
+  @IsDefined({ message: 'blogId is required' })
+  @IsString({ message: 'blogId must be a string' })
   blogId: string;
 }

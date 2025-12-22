@@ -34,7 +34,6 @@ import { CommentViewDto } from '../../coments/api/view-dto/comments.view-dto';
 import { GetCommentsByPostIdQuery } from '../application/queries/get-comments-posts-by-id.query-handler';
 import { CommentCreateInputDto } from '../../coments/api/input-dto/comment-create.input';
 import { CreateCommentByPostIdCommand } from '../application/usecases/create-comment-by-post-id.usecase';
-import { use } from 'passport';
 import { UpdatePostLikeStatusCommand } from '../application/usecases/update-post-like-status.usecase';
 import { GetCommentQueryParams } from '../../coments/api/input-dto/comment-query.input';
 import { JwtAuthGuard } from '../../users/guards/bearer/jwt-auth.guard';
@@ -51,9 +50,10 @@ export class PostsController {
   @ApiBearerAuth()
   @UseGuards(JwtOptionalAuthGuard)
   @Get()
-  async getAll(@Query() query: GetPostsQueryParams): Promise<PaginatedViewDto<PostViewDto[]>> {
-
-    return this.queryBus.execute<GetPostsQuery, PaginatedViewDto<PostViewDto[]>>(new GetPostsQuery(query));
+  async getAll(@Query() query: GetPostsQueryParams,
+               @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<PaginatedViewDto<PostViewDto[]>> {
+    console.log('user', user?.id);
+    return this.queryBus.execute<GetPostsQuery, PaginatedViewDto<PostViewDto[]>>(new GetPostsQuery(query, user?.id));
   }
 
   @ApiBearerAuth()
@@ -118,8 +118,8 @@ export class PostsController {
 
   }
 
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Post('/:postId/comments')
   async createCommentByPost(@Param('postId') postId: string,
                             @Body() body: CommentCreateInputDto,

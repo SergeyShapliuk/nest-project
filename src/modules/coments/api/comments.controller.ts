@@ -67,8 +67,8 @@ export class CommentsController {
 
   // PUT /comments/:commentId/like-status
   @Put(':commentId/like-status')
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateLikeStatus(
     @Param('commentId') commentId: string,
@@ -82,8 +82,8 @@ export class CommentsController {
 
   // DELETE /comments/:id
   @Delete(':id')
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteComment(
     @Param('id') id: string,
