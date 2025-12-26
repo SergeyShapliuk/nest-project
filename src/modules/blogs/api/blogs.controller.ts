@@ -45,7 +45,7 @@ export class BlogsController {
   constructor(private readonly commandBus: CommandBus,
               private readonly queryBus: QueryBus,
               // private blogsService: BlogsService,
-              // private blogsRepository: BlogsRepository,
+              // private blogsRepository: SessionRepository,
               // private blogsQwRepository: BlogsQwRepository,
               private postsService: PostsService,
               // private postsQwRepository: PostsQwRepository,

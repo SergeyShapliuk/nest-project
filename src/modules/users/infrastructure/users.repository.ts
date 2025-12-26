@@ -50,6 +50,14 @@ export class UsersRepository {
     });
   }
 
+  async findByLoginOrEmail(
+    loginOrEmail: string,
+  ): Promise<UserDocument | null> {
+    return this.UserModel.findOne({
+      $or: [{ email: loginOrEmail }, { login: loginOrEmail }],
+    });
+  }
+
   async loginIsExist(login: string): Promise<boolean> {
     return !!(await this.UserModel.countDocuments({ login: login }));
   }

@@ -1,33 +1,44 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { JwtService } from '@nestjs/jwt';
 import { UserContextDto } from '../../guards/dto/user-context.dto';
 import { CryptoService } from './crypto.service';
 import { randomUUID } from 'crypto';
 import { EmailService } from '../../../notifications/email.service';
-import { CreateUserDto } from '../../dto/create-user.dto';
 import { Types } from 'mongoose';
 import { UserService } from './user.service';
 import bcrypt from 'bcrypt';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
+import {
+  ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
+  REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
+} from '../../constants/auth-tokens.inject-constants';
+import { SessionRepository } from '../../infrastructure/session.repository';
+import { RefreshTokenBlackListService } from './refreshTokenBlacklistService';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(ACCESS_TOKEN_STRATEGY_INJECT_TOKEN)
+    private accessTokenContext: JwtService,
+    @Inject(REFRESH_TOKEN_STRATEGY_INJECT_TOKEN)
+    private refreshTokenContext: JwtService,
     private usersRepository: UsersRepository,
+    private sessionRepository: SessionRepository,
     private userService: UserService,
     private emailService: EmailService,
     private jwtService: JwtService,
     private cryptoService: CryptoService,
+    private refreshTokenBlackListService: RefreshTokenBlackListService,
   ) {
   }
 
   async validateUser(
-    login: string,
+    loginOrEmail: string,
     password: string,
-  ): Promise<UserContextDto | null> {
-    const user = await this.usersRepository.findByLogin(login);
+  ): Promise<UserContextDto> {
+    const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
@@ -46,35 +57,9 @@ export class AuthService {
         message: 'Unauthorized',
       });
     }
-
-    return { id: user.id.toString() };
+    console.log('user', user);
+    return { id: user._id };
   }
-
-  // async login(userId: string) {
-  //   const accessToken = this.jwtService.sign({ id: userId } as UserContextDto);
-  //
-  //   return {
-  //     accessToken,
-  //   };
-  // }
-
-  // async registerUser(dto: CreateUserDto) {
-  //   const createdUserId = await this.userService.createUser(dto);
-  //
-  //   const user = await this.usersRepository.findOrNotFoundFail(
-  //     new Types.ObjectId(createdUserId).toString(),
-  //   );
-  //   console.log('registerUserFind:', user);
-  //   const confirmCode = randomUUID();
-  //   const newExpirationDate = new Date(Date.now() + 5 * 60 * 1000);
-  //   console.log('confirmCode:', confirmCode);
-  //   user.setCode(confirmCode, newExpirationDate);
-  //   await this.usersRepository.save(user);
-  //
-  //   await this.emailService
-  //     .sendConfirmationEmail(user.email, confirmCode)
-  //     .catch(console.error);
-  // }
 
   async confirmCode(code: string) {
     console.log('confirmCode:', { code });
@@ -87,14 +72,14 @@ export class AuthService {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'user not found',
-        field:'code'
+        field: 'code',
       });
     }
     if (user.emailConfirmation.isConfirmed) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'user is confirmed',
-        field:'code'
+        field: 'code',
       });
     }
 
@@ -112,14 +97,14 @@ export class AuthService {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'user not found',
-        field:'email'
+        field: 'email',
       });
     }
     if (user.emailConfirmation.isConfirmed) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'user is confirmed',
-        field:'email'
+        field: 'email',
       });
     }
     console.log('resendCode:', user);
@@ -167,6 +152,54 @@ export class AuthService {
 
     user.setNewPassword(passwordHash);
     await this.usersRepository.save(user);
+  }
+
+  async refreshTokens(
+    userId: string, oldRefreshToken: string,
+  ): Promise<{ accessToken: string, refreshToken: string } | null> {
+    const oldPayload = await this.refreshTokenContext.decode(oldRefreshToken) as any;
+    console.log({ oldPayload });
+    if (!oldPayload?.id || !oldPayload?.deviceId) {
+      return null;
+    }
+
+    // Проверяем существование устройства в БД
+    const existingSession = await this.sessionRepository.findById(oldPayload.deviceId);
+    console.log({ existingSession });
+    if (!existingSession || existingSession.userId !== userId) {
+      return null;
+    }
+    const user = await this.usersRepository.findById(new Types.ObjectId(userId));
+
+    if (!user?._id) {
+      return null;
+    }
+    await this.refreshTokenBlackListService.addToBlacklist(oldRefreshToken, userId);
+    const accessToken = this.accessTokenContext.sign({
+      id: userId,
+    });
+    const payload = {
+      id: userId,
+      deviceId: oldPayload.deviceId ?? randomUUID(),
+      iat: Math.floor(Date.now() / 1000),
+    };
+
+    const refreshToken = this.refreshTokenContext.sign(payload);
+    console.log({ accessToken }, { refreshToken });
+    if (!accessToken || !refreshToken) {
+      return null;
+    }
+    const newPayload = await this.refreshTokenContext.decode(refreshToken) as any;
+    if (!newPayload?.iat || !newPayload?.exp) {
+      return null;
+    }
+    await this.sessionRepository.updateSession(oldPayload.deviceId, {
+      lastActiveDate: new Date(newPayload.iat * 1000), // обновляем дату активности
+      expiresAt: new Date(newPayload.exp * 1000),       // обновляем срок действия
+      // deviceId и userId остаются прежними
+    });
+
+    return { accessToken, refreshToken };
   }
 
 }

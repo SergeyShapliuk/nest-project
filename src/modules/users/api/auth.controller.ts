@@ -11,7 +11,7 @@ import type { Request, Response } from 'express';
 import { CreateUserInputDto } from './input-dto/users.input-dto';
 import { AuthService } from '../application/services/auth.service';
 import { ExtractUserFromRequest } from '../guards/decorators/param/extract-user-from-request.decorator';
-import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiBasicAuth, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { Nullable, UserContextDto } from '../guards/dto/user-context.dto';
 import { MeViewDto } from './view-dto/users.view-dto';
 import { AuthQueryRepository } from '../infrastructure/query/auth.query-repository';
@@ -26,6 +26,10 @@ import { NewPasswordUserInputDto } from './input-dto/new-password-user.input-dto
 import { CommandBus } from '@nestjs/cqrs';
 import { LoginUserCommand } from '../application/usecases/login-user.usecase';
 import { RegisterUserCommand } from '../application/usecases/users/register-user.usecase';
+import { RefreshTokenGuard } from '../guards/refresh/refresh-auth.guard';
+import { BasicAuthGuard } from '../guards/basic/basic-auth.guard';
+import { LoginInputDto } from './input-dto/login.input-dto';
+import { RefreshTokenCommand } from '../application/usecases/users/refresh-token.usecase';
 
 @Controller(AUTH_PATH)
 export class AuthController {
@@ -53,7 +57,9 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(LocalAuthGuard)
+  // @UseGuards(LocalAuthGuard)
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
   //swagger doc
   @ApiBody({
     schema: {
@@ -65,14 +71,22 @@ export class AuthController {
     },
   })
   async login(
-    // @Request() req: any
-    @ExtractUserFromRequest() user: UserContextDto,
+    @Body() body: LoginInputDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<{ accessToken: string }> {
-    console.log('login:', user.id);
-    // return this.authService.login(user.id);
+    console.log('login:', body);
+    console.log('req:', req);
+    // Получаем IP адрес
+    const ip = req.ip ||
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+      req.socket?.remoteAddress ||
+      'unknown';
+
+    // Получаем User-Agent
+    const userAgent = req.headers['user-agent'] || 'unknown';
     const { accessToken, refreshToken } = await this.commandBus.execute(
-      new LoginUserCommand({ userId: user.id }),
+      new LoginUserCommand(body, ip, userAgent),
     );
     // Устанавливаем refresh token в httpOnly cookie
     response.cookie('refreshToken', refreshToken, {
@@ -108,6 +122,29 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   confirmNwPassword(@Body() body: NewPasswordUserInputDto): Promise<void> {
     return this.authService.passwordConfirm(body.newPassword, body.recoveryCode);
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Post('refresh-token')
+  async refreshToken(@Req() req: Request,
+                     @Res({ passthrough: true }) response: Response) {
+    const user = req.user;       // теперь TypeScript знает, что есть user
+    const device = req.device;
+    const oldRefreshToken = req.cookies.refreshToken;
+    console.log('refresh', user, device, oldRefreshToken);
+    const {
+      accessToken,
+      refreshToken,
+    } = await this.commandBus.execute(new RefreshTokenCommand(user?.id, device?.id, oldRefreshToken));
+    response.cookie('refreshToken', refreshToken, {
+      httpOnly: true, // Не доступен через JavaScript (защита от XSS)
+      secure: true,
+      sameSite: 'strict', // Защита от CSRF
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней в миллисекундах
+      path: '/', // Доступен для всех путей или '/auth/refresh' если нужно ограничить
+      // domain: '.yourdomain.com', // Если используете поддомены
+    });
+    return { accessToken };
   }
 
   @ApiBearerAuth()

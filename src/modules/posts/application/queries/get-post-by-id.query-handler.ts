@@ -18,7 +18,7 @@ export class GetPostByIdQueryHandler
   constructor(
     @Inject(PostsQwRepository)
     private readonly postsQwRepository: PostsQwRepository,
-    // private readonly blogsRepository: BlogsRepository,
+    // private readonly blogsRepository: SessionRepository,
   ) {
   }
 
