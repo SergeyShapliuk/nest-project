@@ -162,7 +162,7 @@ export class AuthController {
     const oldRefreshToken = req.cookies.refreshToken;
     console.log('refresh', user, device, oldRefreshToken);
     await this.commandBus.execute(new LogoutUserCommand(user?.id, device?.id, oldRefreshToken));
-    response.clearCookie('refreshToken');
+    // response.clearCookie('refreshToken');
   }
 
   @ApiBearerAuth()

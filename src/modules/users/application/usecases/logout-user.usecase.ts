@@ -76,7 +76,7 @@ export class LogoutUserUseCase implements ICommandHandler<LogoutUserCommand> {
       });
     }
     await this.sessionRepository.deleteSessions(userId, oldPayload.deviceId);
-    await this.refreshTokenBlackListService.addToBlacklist(oldRefreshToken, userId);
+    // await this.refreshTokenBlackListService.addToBlacklist(oldRefreshToken, userId);
 
   }
 }
