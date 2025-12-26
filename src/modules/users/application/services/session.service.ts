@@ -33,7 +33,7 @@ export class SessionService {
       deviceId,
       ip,
       title,
-      lastActiveDate: new Date().toISOString(),
+      lastActiveDate: new Date(),
       expiresAt,
       // hashedToken,
     });
@@ -50,7 +50,7 @@ export class SessionService {
     if (!session) return null;
 
     // Обновляем lastActiveDate
-    session.lastActiveDate = new Date().toISOString();
+    session.lastActiveDate = new Date()
     await session.save();
 
     return session;

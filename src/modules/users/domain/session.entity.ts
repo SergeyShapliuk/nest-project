@@ -18,7 +18,7 @@ export class Session {
   title: string;
 
   @Prop({ type: String, required: true })
-  lastActiveDate: string;
+  lastActiveDate: Date;
 
   @Prop({ type: Date, required: true })
   expiresAt: Date;
@@ -44,7 +44,7 @@ export class Session {
     userId: string;
     ip: string;
     title: string; // из user-agent
-    lastActiveDate: string;
+    lastActiveDate: Date;
     // hashedToken: string;
     expiresAt: Date; // ✅ дата окончания токена
   }): SessionDocument {

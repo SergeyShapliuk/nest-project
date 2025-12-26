@@ -4,7 +4,7 @@ import { SessionDocument } from '../../domain/session.entity';
 export class SessionsViewDto {
   ip: string;
   title: string;
-  lastActiveDate: string;
+  lastActiveDate: Date;
   deviceId: string;
 
   static mapToView(session: SessionDocument): SessionsViewDto {
