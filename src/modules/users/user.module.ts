@@ -39,6 +39,7 @@ import { RefreshTokenUseCase } from './application/usecases/users/refresh-token.
 import { RefreshTokenBlackListService } from './application/services/refreshTokenBlacklistService';
 import { BlackList, BlackListSchema } from './domain/blackListToken.entity';
 import { BlackListRepository } from './infrastructure/black-list.repository';
+import { LogoutUserUseCase } from './application/usecases/logout-user.usecase';
 
 const commandHandlers = [
   DeleteUserUseCase,
@@ -48,6 +49,7 @@ const commandHandlers = [
   DeleteSessionUseCase,
   DeleteSessionsUseCase,
   RefreshTokenUseCase,
+  LogoutUserUseCase,
 ];
 
 const queryHandlers = [GetUserByIdQueryHandler, GetSessionsQueryHandler];

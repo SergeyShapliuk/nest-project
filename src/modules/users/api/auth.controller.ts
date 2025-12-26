@@ -30,6 +30,7 @@ import { RefreshTokenGuard } from '../guards/refresh/refresh-auth.guard';
 import { BasicAuthGuard } from '../guards/basic/basic-auth.guard';
 import { LoginInputDto } from './input-dto/login.input-dto';
 import { RefreshTokenCommand } from '../application/usecases/users/refresh-token.usecase';
+import { LogoutUserCommand } from '../application/usecases/logout-user.usecase';
 
 @Controller(AUTH_PATH)
 export class AuthController {
@@ -126,6 +127,7 @@ export class AuthController {
 
   @UseGuards(RefreshTokenGuard)
   @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
   async refreshToken(@Req() req: Request,
                      @Res({ passthrough: true }) response: Response) {
     const user = req.user;       // теперь TypeScript знает, что есть user
@@ -145,6 +147,19 @@ export class AuthController {
       // domain: '.yourdomain.com', // Если используете поддомены
     });
     return { accessToken };
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(@Req() req: Request,
+                     @Res({ passthrough: true }) response: Response) {
+    const user = req.user;       // теперь TypeScript знает, что есть user
+    const device = req.device;
+    const oldRefreshToken = req.cookies.refreshToken;
+    console.log('refresh', user, device, oldRefreshToken);
+    await this.commandBus.execute(new LogoutUserCommand(user?.id, device?.id, oldRefreshToken));
+    response.clearCookie('refreshToken');
   }
 
   @ApiBearerAuth()
