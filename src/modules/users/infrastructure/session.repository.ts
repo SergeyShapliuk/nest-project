@@ -40,6 +40,14 @@ export class SessionRepository {
     return session;
   }
 
+  async deleteCurrentSession(userId: string, deviceId: string): Promise<void> {
+    await this.SessionModel.deleteOne({
+      userId,
+      deviceId,
+    }).exec();
+  }
+
+
   async deleteSessions(userId: string, deviceId: string): Promise<void> {
     const deleteResult = await this.SessionModel.deleteMany({
       userId,
