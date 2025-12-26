@@ -35,11 +35,11 @@ export class RefreshTokenGuard implements CanActivate {
       if (!userId || !deviceId) {
         throw new UnauthorizedException('Invalid token payload');
       }
-      const session = await this.sessionDeviceService.validateToken(userId, deviceId, refreshToken);
-      console.log('asdasdasd', { session });
-      if (!session) {
-        throw new UnauthorizedException('Refresh token invalid or session expired');
-      }
+      // const session = await this.sessionDeviceService.validateToken(userId, deviceId, refreshToken);
+      // console.log('asdasdasd', { session });
+      // if (!session) {
+      //   throw new UnauthorizedException('Refresh token invalid or session expired');
+      // }
 
       req.user = { id: userId } as IdType;
       req.device = { id: deviceId } as IdType;
