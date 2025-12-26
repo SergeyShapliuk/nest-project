@@ -31,6 +31,7 @@ import { BasicAuthGuard } from '../guards/basic/basic-auth.guard';
 import { LoginInputDto } from './input-dto/login.input-dto';
 import { RefreshTokenCommand } from '../application/usecases/users/refresh-token.usecase';
 import { LogoutUserCommand } from '../application/usecases/logout-user.usecase';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller(AUTH_PATH)
 export class AuthController {
@@ -125,6 +126,7 @@ export class AuthController {
     return this.authService.passwordConfirm(body.newPassword, body.recoveryCode);
   }
 
+  @SkipThrottle()
   @UseGuards(RefreshTokenGuard)
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
@@ -149,6 +151,7 @@ export class AuthController {
     return { accessToken };
   }
 
+  @SkipThrottle()
   @UseGuards(RefreshTokenGuard)
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)

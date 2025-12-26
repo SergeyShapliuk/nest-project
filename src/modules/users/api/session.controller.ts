@@ -11,7 +11,9 @@ import { Types } from 'mongoose';
 import { DeleteBlogCommand } from '../../blogs/application/usecases/delete-blog.usecase';
 import { DeleteSessionCommand } from '../application/usecases/delete-session.usecase';
 import { DeleteSessionsCommand } from '../application/usecases/delete-sessions.usecase';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @Controller(SECURITY_PATH)
 export class SessionController {
   constructor(
