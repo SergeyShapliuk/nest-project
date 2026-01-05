@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 
-export const GLOBAL_PREFIX = 'api';
+// export const GLOBAL_PREFIX = 'api';
 export const GLOBAL_PREFIX_SA = 'sa';
 
 export function globalPrefixSetup(app: INestApplication) {
