@@ -1,10 +1,9 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { UsersQwRepository } from '../../infrastructure/query/users.query.repository';
 
-import { Types } from 'mongoose';
 
 export class GetUserByIdQuery {
-  constructor(public userId: Types.ObjectId) {
+  constructor(public userId: string) {
   }
 }
 

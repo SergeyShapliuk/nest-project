@@ -1,5 +1,4 @@
-import { UserDocument } from '../../../domain/user.entity';
-
+import { User } from '../../../domain/user.entity';
 
 export class UserExternalDto {
   id: string;
@@ -13,10 +12,10 @@ export class UserExternalDto {
   //   isConfirmed: boolean;
   // };
 
-  static mapToView(user: UserDocument): UserExternalDto {
+  static mapToView(user: User): UserExternalDto {
     const dto = new UserExternalDto();
 
-    dto.id = user._id.toString();
+    dto.id = user.id; // вместо _id
     dto.login = user.login;
     dto.email = user.email;
     dto.createdAt = user.createdAt.toISOString();

@@ -1,8 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { InjectModel } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
 import { CreateUserDto } from '../../../dto/create-user.dto';
-import { User } from '../../../domain/user.entity';
 import { UsersRepository } from '../../../infrastructure/users.repository';
 import { UsersFactory } from '../../factories/users.factory';
 
@@ -15,7 +12,7 @@ export class CreateUserCommand {
  */
 @CommandHandler(CreateUserCommand)
 export class CreateUserUseCase
-  implements ICommandHandler<CreateUserCommand, Types.ObjectId>
+  implements ICommandHandler<CreateUserCommand, string>
 {
   constructor(
     // @InjectModel(User.name)
@@ -23,12 +20,12 @@ export class CreateUserUseCase
     private usersFactory: UsersFactory,
   ) {}
 
-  async execute({ dto }: CreateUserCommand): Promise<Types.ObjectId> {
+  async execute({ dto }: CreateUserCommand): Promise<string> {
     const user = await this.usersFactory.create(dto);
 
     // user.isEmailConfirmed = true;
     await this.usersRepository.save(user);
 
-    return user._id;
+    return user.id;
   }
 }

@@ -1,10 +1,9 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';
 import { UsersController } from './api/users.controller';
 import { UserService } from './application/services/user.service';
 import { UsersRepository } from './infrastructure/users.repository';
 import { UsersQwRepository } from './infrastructure/query/users.query.repository';
-import { User, UserSchema } from './domain/user.entity';
+import { User } from './domain/user.entity';
 import { AuthQueryRepository } from './infrastructure/query/auth.query-repository';
 import { AuthService } from './application/services/auth.service';
 import { LocalStrategy } from './guards/local/local.strategy';
@@ -28,7 +27,7 @@ import {
 import { UsersFactory } from './application/factories/users.factory';
 import { LoginUserUseCase } from './application/usecases/login-user.usecase';
 import { GetSessionsQueryHandler } from './application/queries/get-sessions.query-handler';
-import { Session, SessionSchema } from './domain/session.entity';
+import { Session } from './domain/session.entity';
 import { SessionController } from './api/session.controller';
 import { SessionService } from './application/services/session.service';
 import { SessionRepository } from './infrastructure/session.repository';
@@ -37,9 +36,10 @@ import { DeleteSessionUseCase } from './application/usecases/delete-session.usec
 import { DeleteSessionsUseCase } from './application/usecases/delete-sessions.usecase';
 import { RefreshTokenUseCase } from './application/usecases/users/refresh-token.usecase';
 import { RefreshTokenBlackListService } from './application/services/refreshTokenBlacklistService';
-import { BlackList, BlackListSchema } from './domain/blackListToken.entity';
+import { BlackList } from './domain/blackListToken.entity';
 import { BlackListRepository } from './infrastructure/black-list.repository';
 import { LogoutUserUseCase } from './application/usecases/logout-user.usecase';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 const commandHandlers = [
   DeleteUserUseCase,
@@ -58,15 +58,12 @@ const queryHandlers = [GetUserByIdQueryHandler, GetSessionsQueryHandler];
   imports: [
     PassportModule,
     JwtModule,
-    MongooseModule.forFeature([
-      { name: User.name, schema: UserSchema }, {
-        name: Session.name,
-        schema: SessionSchema,
-      },
-      {
-        name: BlackList.name,
-        schema: BlackListSchema,
-      }]), NotificationsModule],
+    TypeOrmModule.forFeature([
+      User,
+      Session,
+      BlackList,
+    ]),
+    NotificationsModule],
   controllers: [UsersController, AuthController, SessionController],
   providers: [...commandHandlers, ...queryHandlers, {
     provide: ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,

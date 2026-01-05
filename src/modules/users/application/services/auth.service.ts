@@ -37,7 +37,7 @@ export class AuthService {
   async validateUser(
     loginOrEmail: string,
     password: string,
-  ): Promise<UserContextDto> {
+  ): Promise<{ id: string }> {
     const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
     if (!user) {
       throw new DomainException({
@@ -58,7 +58,7 @@ export class AuthService {
       });
     }
     console.log('user', user);
-    return { id: user._id };
+    return { id: user.id };
   }
 
   async confirmCode(code: string) {
@@ -169,9 +169,9 @@ export class AuthService {
     if (!existingSession || existingSession.userId !== userId) {
       return null;
     }
-    const user = await this.usersRepository.findById(new Types.ObjectId(userId));
+    const user = await this.usersRepository.findById(userId);
 
-    if (!user?._id) {
+    if (!user?.id) {
       return null;
     }
     await this.refreshTokenBlackListService.addToBlacklist(oldRefreshToken, userId);

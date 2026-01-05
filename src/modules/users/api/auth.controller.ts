@@ -45,7 +45,7 @@ export class AuthController {
   @ApiBearerAuth()
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  me(@ExtractUserFromRequest() user: UserContextDto): Promise<MeViewDto> {
+  me(@ExtractUserFromRequest() user: { id: string }): Promise<MeViewDto> {
     // console.log('cookies', request.cookies);
     return this.authQueryRepository.me(user.id);
   }
@@ -156,7 +156,7 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   async logout(@Req() req: Request,
-                     @Res({ passthrough: true }) response: Response) {
+               @Res({ passthrough: true }) response: Response) {
     const user = req.user;       // теперь TypeScript знает, что есть user
     const device = req.device;
     const oldRefreshToken = req.cookies.refreshToken;
@@ -169,7 +169,7 @@ export class AuthController {
   @Get('me-or-default')
   @UseGuards(JwtOptionalAuthGuard)
   async meOrDefault(
-    @ExtractUserIfExistsFromRequest() user: UserContextDto,
+    @ExtractUserIfExistsFromRequest() user: { id: string },
   ): Promise<Nullable<MeViewDto>> {
     if (user) {
       return this.authQueryRepository.me(user.id!);

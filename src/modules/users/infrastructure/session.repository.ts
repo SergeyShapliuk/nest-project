@@ -1,70 +1,86 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
-import type { SessionDocument, SessionModelType } from '../domain/session.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Not, IsNull } from 'typeorm';
 import { Session } from '../domain/session.entity';
 
 export interface SessionDevice {
   deviceId: string;
   userId: string;
   ip: string;
-  title: string; // из user-agent
+  title: string;
   lastActiveDate: Date;
-  expiresAt: Date; // ✅ дата окончания токена
+  expiresAt: Date;
   createdAt: Date;
 }
 
 @Injectable()
 export class SessionRepository {
-  constructor(@InjectModel(Session.name) private SessionModel: SessionModelType) {
+  constructor(
+    @InjectRepository(Session)
+    private readonly sessionRepo: Repository<Session>,
+  ) {}
+
+  async findById(deviceId: string): Promise<Session | null> {
+    return this.sessionRepo.findOne({
+      where: {
+        deviceId,
+        deletedAt: IsNull(),
+      },
+    });
   }
 
-
-  async findById(id: string): Promise<SessionDocument | null> {
-    console.log('id', id);
-    return this.SessionModel.findOne({ deviceId: id, deletedAt: null });
+  async save(session: Session): Promise<void> {
+    await this.sessionRepo.save(session);
   }
 
-  async save(newSession: SessionDocument) {
-    await newSession.save();
-  }
-
-  async findOrNotFoundFail(id: string): Promise<SessionDocument> {
-    const session = await this.findById(id);
+  async findOrNotFoundFail(deviceId: string): Promise<Session> {
+    const session = await this.findById(deviceId);
 
     if (!session) {
-      //TODO: replace with domain exception
       throw new NotFoundException('session not found');
     }
 
     return session;
   }
 
-  async deleteCurrentSession(userId: string, deviceId: string): Promise<void> {
-    await this.SessionModel.deleteOne({
+  /**
+   * DELETE /security/devices/{deviceId}
+   * logout current device
+   */
+  async deleteCurrentSession(
+    userId: string,
+    deviceId: string,
+  ): Promise<void> {
+    await this.sessionRepo.delete({
       userId,
       deviceId,
-    }).exec();
+    });
   }
 
-
-  async deleteSessions(userId: string, deviceId: string): Promise<void> {
-    const deleteResult = await this.SessionModel.deleteMany({
+  /**
+   * DELETE /security/devices
+   * delete all except current device
+   */
+  async deleteSessions(
+    userId: string,
+    deviceId: string,
+  ): Promise<void> {
+    await this.sessionRepo.delete({
       userId,
-      deviceId: { $ne: deviceId }, // все кроме текущего устройства
-    }).exec();
-    if (deleteResult.deletedCount < 1) {
-      // Можно не выбрасывать ошибку, если это нормально (нет других сессий)
-      console.log('No other sessions to delete');
-    }
-    return;
+      deviceId: Not(deviceId), // ✅ аналог $ne
+    });
   }
 
-  async updateSession(deviceId: string, updateData: Partial<SessionDevice>) {
-    await this.SessionModel.updateOne(
+  /**
+   * refresh-token → update lastActiveDate
+   */
+  async updateSession(
+    deviceId: string,
+    updateData: Partial<SessionDevice>,
+  ): Promise<void> {
+    await this.sessionRepo.update(
       { deviceId },
-      { $set: updateData },
+      updateData, // ✅ без $set
     );
   }
-
 }

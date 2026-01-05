@@ -1,6 +1,11 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
-import { CreateUserDomainDto } from './dto/create-user.domain.dto';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
 
 
 export const loginConstraints = {
@@ -18,76 +23,77 @@ export const emailConstraints = {
 };
 
 
-// ==================== SCHEMA (для Mongoose/базы данных) ====================
 
-// Схема для вложенного объекта emailConfirmation
-@Schema({ _id: false })
+/* ==================== EMAIL CONFIRMATION ==================== */
+
 export class EmailConfirmation {
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   confirmationCode: string;
 
-  @Prop({ type: Boolean, required: true, default: false })
+  @Column({ type: 'boolean', default: false })
   isConfirmed: boolean;
 
-  @Prop({ type: Date, required: true })
-  expirationDate: Date; // Используем Date вместо string
+  @Column({ type: 'timestamp with time zone' })
+  expirationDate: Date;
 }
 
-export const EmailConfirmationSchema =
-  SchemaFactory.createForClass(EmailConfirmation);
+/* ==================== USER ENTITY ==================== */
 
-// Основная схема User
-@Schema({ timestamps: true }) // timestamps добавит createdAt и updatedAt автоматически
+@Entity('users')
 export class User {
-  @Prop({ type: String, required: true })
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar', length: 10 })
   login: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   email: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   passwordHash: string;
 
-  @Prop({ type: EmailConfirmationSchema, required: true })
+  // Embedded object (flat columns in users table)
+  @Column(() => EmailConfirmation)
   emailConfirmation: EmailConfirmation;
 
-  // Эти поля добавятся автоматически благодаря timestamps: true
+  @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 
-  // // Для мягкого удаления
-  @Prop({ type: Date, default: null })
+  @Column({
+    type: 'timestamp with time zone',
+    nullable: true,
+    default: null,
+  })
   deletedAt: Date | null;
 
-  get id() {
-    // @ts-ignore
-    return this._id.toString();
-  }
+  /* ==================== DOMAIN METHODS ==================== */
 
-  static createInstance(dto: CreateUserDomainDto): UserDocument {
-    const user = new this();
+  static createInstance(dto: {
+    login: string;
+    email: string;
+    passwordHash: string;
+  }): User {
+    const user = new User();
 
     user.login = dto.login;
     user.email = dto.email;
-    user.passwordHash = dto.password;
+    user.passwordHash = dto.passwordHash;
 
     user.emailConfirmation = {
       confirmationCode: 'code',
       expirationDate: new Date(),
-      isConfirmed: false, // всегда false при создании
+      isConfirmed: false,
     };
 
-    return user as UserDocument;
+    return user;
   }
 
-  /**
-   * Marks the user as deleted
-   * Throws an error if already deleted
-   * @throws {Error} If the entity is already deleted
-   * DDD сontinue: инкапсуляция (вызываем методы, которые меняют состояние\св-ва) объектов согласно правилам этого объекта
-   */
   makeDeleted() {
-    if (this.deletedAt !== null) {
+    if (this.deletedAt) {
       throw new Error('Entity already deleted');
     }
     this.deletedAt = new Date();
@@ -100,42 +106,27 @@ export class User {
     this.emailConfirmation.isConfirmed = true;
   }
 
-  setCode(newCode: string, newExpiration: Date) {
-    if (this.emailConfirmation.confirmationCode === newCode) {
-      return;
-    }
+  setCode(code: string, expiration: Date) {
     this.emailConfirmation = {
-      confirmationCode: newCode,
-      expirationDate: newExpiration,
+      confirmationCode: code,
+      expirationDate: expiration,
       isConfirmed: false,
     };
   }
 
-  setNewPassword(newPassword: string) {
-    if (this.passwordHash === newPassword) {
-      return;
-    }
-    this.passwordHash = newPassword;
+  setNewPassword(newHash: string) {
+    if (this.passwordHash === newHash) return;
+    this.passwordHash = newHash;
   }
 
-  updateEmail(newEmail: string, newCode: string, newExpiration: Date) {
-    if (newEmail !== this.email) {
+  updateEmail(newEmail: string, code: string, expiration: Date) {
+    if (this.email !== newEmail) {
       this.email = newEmail;
       this.emailConfirmation = {
-        confirmationCode: newCode,
-        expirationDate: newExpiration,
+        confirmationCode: code,
+        expirationDate: expiration,
         isConfirmed: false,
       };
     }
   }
 }
-
-// Создаем схему Mongoose
-export const UserSchema = SchemaFactory.createForClass(User);
-UserSchema.loadClass(User);
-
-// Тип документа Mongoose
-// Types
-export type UserDocument = HydratedDocument<User>;
-export type UserModelType = Model<UserDocument> & typeof User;
-

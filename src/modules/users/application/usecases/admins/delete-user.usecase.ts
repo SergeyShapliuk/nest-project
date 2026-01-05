@@ -1,9 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersRepository } from '../../../infrastructure/users.repository';
-import { Types } from 'mongoose';
 
 export class DeleteUserCommand {
-  constructor(public userId: Types.ObjectId) {
+  constructor(public userId: string) {
   }
 }
 

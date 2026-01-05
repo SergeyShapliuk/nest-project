@@ -1,23 +1,25 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, ILike, IsNull } from 'typeorm';
+
 import { User } from '../../domain/user.entity';
-import type { UserModelType } from '../../domain/user.entity';
 import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params.input-dto';
 import { UserViewDto } from '../../api/view-dto/users.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { FilterQuery ,Types} from 'mongoose';
 
 @Injectable()
 export class UsersQwRepository {
   constructor(
-    @InjectModel(User.name) private UserModel: UserModelType,
-  ) {
-  }
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+  ) {}
 
-  async getByIdOrNotFoundFail(id: Types.ObjectId): Promise<UserViewDto> {
-    const user = await this.UserModel.findOne({
-      _id: id,
-      deletedAt: null,
+  async getByIdOrNotFoundFail(id: string): Promise<UserViewDto> {
+    const user = await this.userRepo.findOne({
+      where: {
+        id,
+        deletedAt: IsNull(),
+      },
     });
 
     if (!user) {
@@ -30,71 +32,59 @@ export class UsersQwRepository {
   async getAll(
     queryDto: GetUsersQueryParams,
   ): Promise<PaginatedViewDto<UserViewDto[]>> {
-    // const {
-    //   pageNumber,
-    //   pageSize,
-    //   sortBy,
-    //   sortDirection,
-    //   searchLoginTerm,
-    //   searchEmailTerm,
-    // } = queryDto;
-   console.log({queryDto})
-    // const skip = (pageNumber - 1) * pageSize;
-    // const filter: any = {};
-    const orConditions: any[] = [];
-    const filter: FilterQuery<User> = {
-      deletedAt: null,
-    };
+    const {
+      pageNumber,
+      pageSize,
+      sortBy,
+      sortDirection,
+      searchLoginTerm,
+      searchEmailTerm,
+    } = queryDto;
+console.log({queryDto})
+    const qb = this.userRepo
+      .createQueryBuilder('u')
+      .where('u.deletedAt IS NULL');
 
-    if (queryDto.searchLoginTerm) {
-      orConditions.push({
-        login: {
-          $regex: queryDto.searchLoginTerm.trim(),
-          $options: 'i',
+    /* ========= SEARCH ========= */
+
+    if (searchLoginTerm || searchEmailTerm) {
+      qb.andWhere(
+        `(
+          (:searchLogin IS NOT NULL AND u.login ILIKE :searchLogin)
+          OR
+          (:searchEmail IS NOT NULL AND u.email ILIKE :searchEmail)
+        )`,
+        {
+          searchLogin: searchLoginTerm
+            ? `%${searchLoginTerm.trim()}%`
+            : null,
+          searchEmail: searchEmailTerm
+            ? `%${searchEmailTerm.trim()}%`
+            : null,
         },
-        // filter.$or = filter.$or || [];
-        // filter.$or.push({
-        //   login: { $regex: queryDto.searchLoginTerm, $options: 'i' },
-      });
+      );
     }
 
-    if (queryDto.searchEmailTerm) {
-      orConditions.push({
-        email: {
-          $regex: queryDto.searchEmailTerm.trim(),
-          $options: 'i',
-        },
-      });
-      // filter.$or = filter.$or || [];
-      // filter.$or.push({
-      //   email: { $regex: queryDto.searchEmailTerm, $options: 'i' },
-      // });
-    }
+    /* ========= SORT ========= */
 
-    if (orConditions.length > 0) {
-      filter.$or = orConditions;
-    }
-    // const filter = orConditions.length > 0 ? { $or: orConditions } : {};
+    qb.orderBy(
+      `u.${sortBy}`,
+      sortDirection.toUpperCase() as 'ASC' | 'DESC',
+    );
 
-    const sortDirectionNumber = queryDto.sortDirection === 'asc' ? 1 : -1;
+    /* ========= PAGINATION ========= */
 
-    const users = await this.UserModel
-      .find(filter)
-      // .collation({locale: "en", strength: 2})
-      .sort({ [queryDto.sortBy]: sortDirectionNumber })
-      .skip(queryDto.calculateSkip())
-      .limit(queryDto.pageSize)
-      .exec();
+    qb.skip(queryDto.calculateSkip()).take(pageSize);
 
-    const totalCount = await this.UserModel.countDocuments(filter);
+    const [users, totalCount] = await qb.getManyAndCount();
+
     const items = users.map(UserViewDto.mapToView);
 
     return PaginatedViewDto.mapToView({
       items,
       totalCount,
-      page: queryDto.pageNumber,
-      size: queryDto.pageSize,
+      page: pageNumber,
+      size: pageSize,
     });
   }
-
 }

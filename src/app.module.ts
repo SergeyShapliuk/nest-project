@@ -15,20 +15,28 @@ import { DomainHttpExceptionsFilter } from './core/exceptions/filters/domain-exc
 import { TestValidationFilter } from './core/exceptions/filters/test-validation.filter';
 import configuration from './core/config/configuration';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [ConfigModule.forRoot({
     isGlobal: true,
     load: [configuration],
-  }), MongooseModule.forRoot(SETTINGS.MONGO_URL),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 10000, // 10 секунд (в миллисекундах)
-          limit: 5,    // 5 запросов
-        },
-      ],
+  }),
+    MongooseModule.forRoot(SETTINGS.MONGO_URL),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      url: SETTINGS.POSTGRESQL_URL,
+      autoLoadEntities: true,
+      synchronize: true,
     }),
+    // ThrottlerModule.forRoot({
+    //   throttlers: [
+    //     {
+    //       ttl: 10000, // 10 секунд (в миллисекундах)
+    //       limit: 5,    // 5 запросов
+    //     },
+    //   ],
+    // }),
     UserModule, PostModule, BlogModule, TestingModule, CoreModule],
   controllers: [AppController],
   providers: [AppService,
@@ -44,10 +52,10 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
       provide: APP_FILTER,
       useClass: DomainHttpExceptionsFilter,
     },
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard, // Глобальный guard
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: ThrottlerGuard, // Глобальный guard
+    // },
   ],
 })
 export class AppModule {

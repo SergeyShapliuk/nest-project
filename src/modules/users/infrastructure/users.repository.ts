@@ -1,28 +1,31 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import type { UserModelType } from '../domain/user.entity';
-import { User, UserDocument } from '../domain/user.entity';
-import { Types } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { IsNull, Repository } from 'typeorm';
+import { User } from '../domain/user.entity';
 import { DomainException } from '../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
 
-
 @Injectable()
 export class UsersRepository {
-  constructor(@InjectModel(User.name) private UserModel: UserModelType) {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+  ) {}
+
+  async findById(id: string): Promise<User | null> {
+    return this.userRepo.findOne({
+      where: {
+        id,
+        deletedAt: IsNull(),
+      },
+    });
   }
 
-
-  async findById(id: Types.ObjectId): Promise<UserDocument | null> {
-    console.log('id', id);
-    return this.UserModel.findOne({ _id: id, deletedAt: null });
+  async save(user: User): Promise<void> {
+    await this.userRepo.save(user);
   }
 
-  async save(newUser: UserDocument) {
-    await newUser.save();
-  }
-
-  async findOrNotFoundFail(id: Types.ObjectId): Promise<UserDocument> {
+  async findOrNotFoundFail(id: string): Promise<User> {
     const user = await this.findById(id);
 
     if (!user) {
@@ -35,31 +38,54 @@ export class UsersRepository {
     return user;
   }
 
-  findByLogin(login: string): Promise<UserDocument | null> {
-    return this.UserModel.findOne({ login });
-  }
-
-  findByEmail(email: string): Promise<UserDocument | null> {
-    return this.UserModel.findOne({ email });
-  }
-
-  findByCode(code: string): Promise<UserDocument | null> {
-    return this.UserModel.findOne({
-      'emailConfirmation.confirmationCode': code,
-      'emailConfirmation.expirationDate': { $gt: new Date() },
+  async findByLogin(login: string): Promise<User | null> {
+    return this.userRepo.findOne({
+      where: {
+        login,
+        deletedAt: IsNull(),
+      },
     });
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepo.findOne({
+      where: {
+        email,
+        deletedAt: IsNull(),
+      },
+    });
+  }
+
+  async findByCode(code: string): Promise<User | null> {
+    return this.userRepo
+      .createQueryBuilder('u')
+      .where('u.emailConfirmationCode = :code', { code })
+      .andWhere('u.emailConfirmationExpirationDate > :now', {
+        now: new Date(),
+      })
+      .andWhere('u.deletedAt IS NULL')
+      .getOne();
   }
 
   async findByLoginOrEmail(
     loginOrEmail: string,
-  ): Promise<UserDocument | null> {
-    return this.UserModel.findOne({
-      $or: [{ email: loginOrEmail }, { login: loginOrEmail }],
-    });
+  ): Promise<User | null> {
+    return this.userRepo
+      .createQueryBuilder('u')
+      .where('u.login = :value OR u.email = :value', {
+        value: loginOrEmail,
+      })
+      .andWhere('u.deletedAt IS NULL')
+      .getOne();
   }
 
   async loginIsExist(login: string): Promise<boolean> {
-    return !!(await this.UserModel.countDocuments({ login: login }));
-  }
+    const count = await this.userRepo.count({
+      where: {
+        login,
+      },
+    });
 
+    return count > 0;
+  }
 }

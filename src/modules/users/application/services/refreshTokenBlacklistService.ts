@@ -1,14 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import crypto from 'crypto';
 import { BlackList } from '../../domain/blackListToken.entity';
-import type { BlackListModelType } from '../../domain/blackListToken.entity';
-import { BlackListRepository } from '../../infrastructure/black-list.repository';
 import {
   ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
   REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
 } from '../../constants/auth-tokens.inject-constants';
 import { JwtService } from '@nestjs/jwt';
+import { IsNull, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 
 /**
@@ -26,13 +25,12 @@ export interface BlacklistedToken {
 @Injectable()
 export class RefreshTokenBlackListService {
   constructor(
-    @InjectModel(BlackList.name)
-    private readonly BlackListModel: BlackListModelType,
     @Inject(ACCESS_TOKEN_STRATEGY_INJECT_TOKEN)
     private accessTokenContext: JwtService,
     @Inject(REFRESH_TOKEN_STRATEGY_INJECT_TOKEN)
     private refreshTokenContext: JwtService,
-    private readonly blackListRepository: BlackListRepository,
+    @InjectRepository(BlackList)
+    private readonly blackListRepository: Repository<BlackList>,
   ) {
   }
 
@@ -50,7 +48,7 @@ export class RefreshTokenBlackListService {
     }
     console.log('addToBlacklist', decoded);
     const expiresAt = new Date(decoded.exp * 1000); // exp в секундах
-    const blackList = this.BlackListModel.createInstance({ token: refreshToken, userId, expiresAt });
+    const blackList = this.blackListRepository.create({ token: refreshToken, userId, expiresAt });
     await this.blackListRepository.save(blackList);
     // await collection.insertOne({ token: refreshToken, userId, expiresAt });
     // const addCollection = await collection.findOne({ token: refreshToken });
@@ -64,7 +62,9 @@ export class RefreshTokenBlackListService {
   async isTokenBlacklisted(
     refreshToken: string,
   ): Promise<boolean> {
-    const tokenDoc = await this.blackListRepository.findById(refreshToken)
+    const tokenDoc = await this.blackListRepository.findOne({
+      where: { token: refreshToken, deletedAt: IsNull() },
+    });
     console.log('isTokenBlacklisted', tokenDoc);
     return !!tokenDoc;
   }

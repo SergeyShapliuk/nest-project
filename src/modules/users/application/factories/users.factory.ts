@@ -1,48 +1,39 @@
-import { CreateUserDto } from '../../dto/create-user.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from '../../domain/user.entity';
-import type { UserModelType } from '../../domain/user.entity';
 import { Injectable } from '@nestjs/common';
+import { CreateUserDto } from '../../dto/create-user.dto';
 import { CryptoService } from '../services/crypto.service';
-import { DomainException } from '../../../../core/exceptions/domain-exceptions';
-import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
-import { UsersRepository } from '../../infrastructure/users.repository';
+import { User } from '../../domain/user.entity';
 
 @Injectable()
 export class UsersFactory {
-  // ❌ passwordHash: string; ни в коем случае не шарим состояние между методов через св-ва объекта (сервиса, юзкейса, квери, репозитория)
-  // потому что синглтон, между разными запросами может быть перезапись данных
-
   constructor(
     private readonly cryptoService: CryptoService,
-    @InjectModel(User.name)
-    private UserModel: UserModelType,
-    private usersRepository: UsersRepository,
-  ) {
+  ) {}
+
+  async create(dto: CreateUserDto): Promise<User> {
+    const passwordHash = await this.createPasswordHash(dto.password);
+    return this.createUserInstance(dto, passwordHash);
   }
 
-  async create(dto: CreateUserDto): Promise<UserDocument> {
-
-    const passwordHash = await this.createPasswordHash(dto);
-    const user = this.createUserInstance(dto, passwordHash);
-
-    return user;
+  private async createPasswordHash(password: string): Promise<string> {
+    return this.cryptoService.createPasswordHash(password);
   }
 
-  private async createPasswordHash(dto: CreateUserDto) {
-    const passwordHash = await this.cryptoService.createPasswordHash(
-      dto.password,
-    );
-    return passwordHash;
-  }
+  private createUserInstance(
+    dto: CreateUserDto,
+    passwordHash: string,
+  ): User {
+    const user = new User();
 
-  private createUserInstance(dto: CreateUserDto, passwordHash: string) {
-    const user = this.UserModel.createInstance({
-      email: dto.email,
-      login: dto.login,
-      password: passwordHash,
-      // age: dto.age,
-    });
+    user.login = dto.login;
+    user.email = dto.email;
+    user.passwordHash = passwordHash;
+
+    user.emailConfirmation = {
+      confirmationCode: 'code',
+      expirationDate: new Date(),
+      isConfirmed: false,
+    };
+
     return user;
   }
 }

@@ -1,18 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import * as crypto from 'crypto';
-import type { SessionDocument, SessionModelType } from '../../domain/session.entity';
 import { Session } from '../../domain/session.entity';
-import { SessionRepository } from '../../infrastructure/session.repository';
+import { IsNull, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class SessionService {
-  constructor(
-    @InjectModel(Session.name)
-    private readonly SessionModel: SessionModelType,
-    private readonly sessionRepository: SessionRepository,
-  ) {
-  }
+  constructor( @InjectRepository(Session)private readonly sessionRepository: Repository<Session>) {}
 
   private hashToken(token: string): string {
     return crypto.createHash('sha256').update(token).digest('hex');
@@ -21,46 +15,44 @@ export class SessionService {
   async createSession(
     userId: string,
     deviceId: string,
-    // refreshToken: string,
     ip: string,
     title: string,
     expiresAt: Date,
   ): Promise<string> {
-    // const hashedToken = this.hashToken(refreshToken);
-
-    const session = this.SessionModel.createInstance({
+    // Создаём новую сессию через репозиторий
+    const session = this.sessionRepository.create({
       userId,
       deviceId,
       ip,
       title,
       lastActiveDate: new Date(),
       expiresAt,
-      // hashedToken,
+      // hashedToken: this.hashToken(refreshToken),
     });
 
     await this.sessionRepository.save(session);
-    return session._id.toString();
+    return session.id; // UUID вместо _id
   }
 
-  async validateToken(userId: string, deviceId: string, refreshToken: string) {
-    // const hashedToken = this.hashToken(refreshToken);
-
-    const session = await this.SessionModel.findOne({ userId, deviceId });
+  async validateToken(userId: string, deviceId: string): Promise<Session | null> {
+    const session = await this.sessionRepository.findOne({
+      where: { userId, deviceId, deletedAt: IsNull() },
+    });
 
     if (!session) return null;
 
     // Обновляем lastActiveDate
-    session.lastActiveDate = new Date()
-    await session.save();
+    session.lastActiveDate = new Date();
+    await this.sessionRepository.save(session);
 
     return session;
   }
 
-  // async deleteSession(userId: string, deviceId: string) {
-  //   await this.SessionModel.deleteOne({ userId, deviceId });
-  // }
+  async deleteSession(userId: string, deviceId: string): Promise<void> {
+    await this.sessionRepository.softDelete({ userId, deviceId });
+  }
 
-  // async deleteAllSessions(userId: string) {
-  //   await this.SessionModel.deleteMany({ userId });
-  // }
+  async deleteAllSessions(userId: string): Promise<void> {
+    await this.sessionRepository.softDelete({ userId });
+  }
 }

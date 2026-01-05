@@ -22,7 +22,7 @@ export class UpdatePostLikeStatusCommand {
 export class UpdatePostLikeStatusUseCase
   implements ICommandHandler<UpdatePostLikeStatusCommand, void> {
   constructor(
-    @InjectModel(Post.name)private postsModel: PostModelType,
+    @InjectModel(Post.name) private postsModel: PostModelType,
     private postsRepository: PostsRepository,
     private usersRepository: UsersRepository,
     private postsLikeRepository: PostsLikeRepository,
@@ -31,7 +31,7 @@ export class UpdatePostLikeStatusUseCase
 
   async execute({ dto, postId, userId }: UpdatePostLikeStatusCommand): Promise<void> {
     await this.postsRepository.findOrNotFoundFail(postId);
-    const user = await this.usersRepository.findOrNotFoundFail(new Types.ObjectId(userId?.toString() || ''));
+    const user = await this.usersRepository.findOrNotFoundFail(userId?.toString() || '');
 
     await this.postsLikeRepository.updateLikeStatus(postId.toString(), userId?.toString() || 'unknown', user.login || 'unknown', dto.likeStatus);
     // const entity = await this.postsRepository.findOrNotFoundFail(postId);

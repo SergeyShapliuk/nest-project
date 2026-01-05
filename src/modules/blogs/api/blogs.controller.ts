@@ -74,13 +74,14 @@ export class BlogsController {
   @ApiParam({ name: 'id', type: 'string' })
   @Get(':blogId')
   async getBlogId(@Param('blogId') blogId: string,
-                  @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<BlogViewDto> {
+                  @ExtractUserIfExistsFromRequest() user: { id: string } | null): Promise<BlogViewDto> {
     // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
     console.log('getBlogId', blogId);
     console.log('getBlogIdUser', user);
     const blogObjectId = new Types.ObjectId(blogId);
+    const userObjectId = new Types.ObjectId(user?.id || '');
     // return this.blogsQwRepository.getByIdOrNotFoundFail(blogId);
-    return this.queryBus.execute(new GetBlogByIdQuery(blogObjectId, user?.id || null));
+    return this.queryBus.execute(new GetBlogByIdQuery(blogObjectId, userObjectId  || null));
   }
 
   @ApiBasicAuth('basicAuth')
@@ -113,7 +114,7 @@ export class BlogsController {
   @ApiParam({ name: 'id', type: 'string' })
   @Get(':blogId/posts')
   async getPostsByBlogId(@Query() query: GetPostsQueryParams, @Param('blogId') blogId: string,
-                         @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<PaginatedViewDto<PostViewDto[]>> {
+                         @ExtractUserIfExistsFromRequest() user: { id: string } | null): Promise<PaginatedViewDto<PostViewDto[]>> {
     console.log('getPostsByBlogId', query);
     console.log('getPostsByBlogId2', blogId);
     // const blogObjectId = new Types.ObjectId(blogId);

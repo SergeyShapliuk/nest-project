@@ -1,102 +1,65 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+} from 'typeorm';
 
-
-
-@Schema({ timestamps: true }) // timestamps добавит createdAt и updatedAt автоматически
+@Entity('sessions')
+@Index(['userId'])
+@Index(['deviceId'], { unique: true })
 export class Session {
-  @Prop({ type: String, required: true })
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar' })
   deviceId: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'uuid' })
   userId: string;
 
-  @Prop({ type: String, required: true })
+  @Column()
   ip: string;
 
-  @Prop({ type: String, required: true })
+  @Column()
   title: string;
 
-  @Prop({ type: Date, required: true })
+  @Column({ type: 'timestamptz' })
   lastActiveDate: Date;
 
-  @Prop({ type: Date, required: true })
+  @Column({ type: 'timestamptz' })
   expiresAt: Date;
 
-  // @Prop({ type: String, required: true })
-  // hashedToken: string; // sha256(refreshToken)
-
-  // Эти поля добавятся автоматически благодаря timestamps: true
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  // // Для мягкого удаления
-  @Prop({ type: Date, default: null })
+  @Column({ type: 'timestamptz', nullable: true })
   deletedAt: Date | null;
 
-  get id() {
-    // @ts-ignore
-    return this._id.toString();
-  }
-
-  static createInstance(dto: {
+  static create(dto: {
     deviceId: string;
     userId: string;
     ip: string;
-    title: string; // из user-agent
+    title: string;
     lastActiveDate: Date;
-    // hashedToken: string;
-    expiresAt: Date; // ✅ дата окончания токена
-  }): SessionDocument {
-    const session = new this();
-
-    session.deviceId = dto.deviceId;
-    session.userId = dto.userId;
-    session.ip = dto.ip;
-    session.title = dto.title;
-    session.lastActiveDate = dto.lastActiveDate;
-    // session.hashedToken = dto.hashedToken;
-    session.expiresAt = dto.expiresAt;
-
-
-    return session as SessionDocument;
+    expiresAt: Date;
+  }): Session {
+    return Object.assign(new Session(), dto);
   }
 
-  /**
-   * Marks the user as deleted
-   * Throws an error if already deleted
-   * @throws {Error} If the entity is already deleted
-   * DDD сontinue: инкапсуляция (вызываем методы, которые меняют состояние\св-ва) объектов согласно правилам этого объекта
-   */
+  updateLastActiveDate(date: Date) {
+    this.lastActiveDate = date;
+  }
+
   makeDeleted() {
-    if (this.deletedAt !== null) {
-      throw new Error('Entity already deleted');
+    if (this.deletedAt) {
+      throw new Error('Session already deleted');
     }
     this.deletedAt = new Date();
   }
-
-  // updatePost(dto: UpdatePostDto) {
-  //   if (dto.title !== this.title) {
-  //     this.title = dto.title;
-  //   }
-  //   if (dto.shortDescription !== this.shortDescription) {
-  //     this.shortDescription = dto.shortDescription;
-  //   }
-  //   if (dto.content !== this.content) {
-  //     this.content = dto.content;
-  //   }
-  //   if (dto.blogId !== this.blogId) {
-  //     this.blogId = dto.blogId;
-  //   }
-  // }
 }
-
-// Создаем схему Mongoose
-export const SessionSchema = SchemaFactory.createForClass(Session);
-SessionSchema.loadClass(Session);
-
-// Тип документа Mongoose
-// Types
-export type SessionDocument = HydratedDocument<Session>;
-export type SessionModelType = Model<SessionDocument> & typeof Session;
-

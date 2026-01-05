@@ -34,7 +34,7 @@ export class CreateCommentByPostIdUseCase
     await this.postsRepository.findOrNotFoundFail(postId);
 
 
-    const user = await this.usersRepository.findOrNotFoundFail(new Types.ObjectId(userId));
+    const user = await this.usersRepository.findOrNotFoundFail(userId?.toString() || '');
 
     const commentatorInfo = {
       userId: userId?.toString() || 'unknown',

@@ -1,46 +1,46 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
-import { BlackList, BlackListDocument } from '../domain/blackListToken.entity';
-import type { BlackListModelType } from '../domain/blackListToken.entity';
-
+import { IsNull, Not, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { BlackList } from '../domain/blackListToken.entity';
 
 @Injectable()
 export class BlackListRepository {
-  constructor(@InjectModel(BlackList.name) private BlackListModel: BlackListModelType) {
+  constructor(
+    @InjectRepository(BlackList)
+    private readonly blackListRepository: Repository<BlackList>,
+  ) {}
+
+  async findById(token: string): Promise<BlackList | null> {
+    console.log('token', token);
+    return this.blackListRepository.findOne({
+      where: { token, deletedAt: IsNull() },
+    });
   }
 
-
-  async findById(id: string): Promise<BlackListDocument | null> {
-    console.log('id', id);
-    return this.BlackListModel.findOne({ token: id, deletedAt: null });
+  async save(newSession: BlackList): Promise<BlackList> {
+    return this.blackListRepository.save(newSession);
   }
 
-  async save(newSession: BlackListDocument) {
-    await newSession.save();
-  }
-
-  async findOrNotFoundFail(id: string): Promise<BlackListDocument> {
-    const session = await this.findById(id);
-    console.log('No other sessions to findOrNotFoundFail',id);
+  async findOrNotFoundFail(token: string): Promise<BlackList> {
+    const session = await this.findById(token);
+    console.log('No other sessions to findOrNotFoundFail', token);
     if (!session) {
-      //TODO: replace with domain exception
+      // TODO: replace with domain exception
       throw new NotFoundException('session not found');
     }
-
     return session;
   }
 
   async deleteSessions(userId: string, deviceId: string): Promise<void> {
-    const deleteResult = await this.BlackListModel.deleteMany({
+    const deleteResult = await this.blackListRepository.delete({
       userId,
-      deviceId: { $ne: deviceId }, // все кроме текущего устройства
-    }).exec();
-    if (deleteResult.deletedCount < 1) {
-      // Можно не выбрасывать ошибку, если это нормально (нет других сессий)
+      deviceId: Not(deviceId), // все кроме текущего устройства
+    });
+
+    // безопасная проверка на null/undefined
+    if ((deleteResult.affected ?? 0) < 1) {
       console.log('No other sessions to delete');
     }
-    return;
   }
 
 }
