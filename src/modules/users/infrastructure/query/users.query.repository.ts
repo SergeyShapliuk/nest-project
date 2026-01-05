@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, IsNull } from 'typeorm';
+import { Repository, ILike, IsNull, Brackets } from 'typeorm';
 
 import { User } from '../../domain/user.entity';
 import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params.input-dto';
@@ -40,28 +40,30 @@ export class UsersQwRepository {
       searchLoginTerm,
       searchEmailTerm,
     } = queryDto;
-console.log({queryDto})
+
+    console.log({ searchLoginTerm, searchEmailTerm });
+
     const qb = this.userRepo
       .createQueryBuilder('u')
       .where('u.deletedAt IS NULL');
 
     /* ========= SEARCH ========= */
 
+    // Используем Brackets для корректного OR условия
     if (searchLoginTerm || searchEmailTerm) {
       qb.andWhere(
-        `(
-          (:searchLogin IS NOT NULL AND u.login ILIKE :searchLogin)
-          OR
-          (:searchEmail IS NOT NULL AND u.email ILIKE :searchEmail)
-        )`,
-        {
-          searchLogin: searchLoginTerm
-            ? `%${searchLoginTerm.trim()}%`
-            : null,
-          searchEmail: searchEmailTerm
-            ? `%${searchEmailTerm.trim()}%`
-            : null,
-        },
+        new Brackets(qb2 => {
+          if (searchLoginTerm) {
+            qb2.orWhere('u.login ILIKE :searchLogin', {
+              searchLogin: `%${searchLoginTerm.trim()}%`,
+            });
+          }
+          if (searchEmailTerm) {
+            qb2.orWhere('u.email ILIKE :searchEmail', {
+              searchEmail: `%${searchEmailTerm.trim()}%`,
+            });
+          }
+        })
       );
     }
 
