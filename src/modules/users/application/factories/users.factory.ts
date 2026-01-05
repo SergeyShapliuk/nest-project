@@ -28,11 +28,11 @@ export class UsersFactory {
     user.email = dto.email;
     user.passwordHash = passwordHash;
 
-    // user.emailConfirmation = {
-    //   confirmationCode: 'code',
-    //   expirationDate: new Date(),
-    //   isConfirmed: false,
-    // };
+    user.emailConfirmation = {
+      confirmationCode: 'code',
+      expirationDate: new Date(),
+      isConfirmed: false,
+    };
 
     return user;
   }
