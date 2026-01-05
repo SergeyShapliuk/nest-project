@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 
 
-
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
@@ -73,7 +72,7 @@ export class EmailService {
               </p>`,
       });
     } catch (e) {
-      console.log('smtp erro');
+      console.log('smtp erro', e);
       throw Error('smtp erro');
     }
   }

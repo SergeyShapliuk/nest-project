@@ -24,9 +24,9 @@ import { EmailService } from './email.service';
               user: emailConfig?.user,
               pass: emailConfig?.pass,
             },
-            // tls: {
-            //   rejectUnauthorized: false,
-            // },
+            tls: {
+              rejectUnauthorized: false,
+            },
           },
           defaults: {
             from: `${emailConfig?.name} <${emailConfig?.user}>`,

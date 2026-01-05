@@ -23,7 +23,7 @@ export class RegisterUserUseCase
     private eventBus: EventBus,
     private usersRepository: UsersRepository,
     private usersFactory: UsersFactory,
-    // private emailService: EmailService,
+    private emailService: EmailService,
   ) {
   }
 
@@ -60,9 +60,9 @@ export class RegisterUserUseCase
       // ивенты могут возвращаться из метода сущности
       //const events = user.setConfirmationCode(confirmCode);
       await this.usersRepository.save(user);
-      // await this.emailService
-      //   .sendConfirmationEmail(user.email, confirmCode)
-      //   .catch(console.error);
+      await this.emailService
+        .sendConfirmationEmail(user.email, confirmCode)
+        .catch(console.error);
 
       // this.eventBus.publish(new UserRegisteredEvent(user.email, confirmCode));
       // а могут просто накапливаться в сущности и в конце мы можем у неё
