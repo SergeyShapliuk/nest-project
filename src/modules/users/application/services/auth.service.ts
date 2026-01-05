@@ -1,11 +1,9 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { JwtService } from '@nestjs/jwt';
-import { UserContextDto } from '../../guards/dto/user-context.dto';
 import { CryptoService } from './crypto.service';
 import { randomUUID } from 'crypto';
 import { EmailService } from '../../../notifications/email.service';
-import { Types } from 'mongoose';
 import { UserService } from './user.service';
 import bcrypt from 'bcrypt';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
@@ -114,9 +112,9 @@ export class AuthService {
     user.setCode(newConfirmationCode, newExpirationDate);
     await this.usersRepository.save(user);
 
-    await this.emailService
-      .sendConfirmationEmail(user.email, newConfirmationCode)
-      .catch(console.error);
+    // await this.emailService
+    //   .sendConfirmationEmail(user.email, newConfirmationCode)
+    //   .catch(console.error);
   }
 
   async passwordRecovery(email: string) {
