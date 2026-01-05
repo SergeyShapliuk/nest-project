@@ -52,10 +52,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       provide: APP_FILTER,
       useClass: DomainHttpExceptionsFilter,
     },
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: ThrottlerGuard, // Глобальный guard
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard, // Глобальный guard
+    },
   ],
 })
 export class AppModule {
