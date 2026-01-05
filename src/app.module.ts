@@ -29,14 +29,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       autoLoadEntities: true,
       synchronize: true,
     }),
-    // ThrottlerModule.forRoot({
-    //   throttlers: [
-    //     {
-    //       ttl: 10000, // 10 секунд (в миллисекундах)
-    //       limit: 5,    // 5 запросов
-    //     },
-    //   ],
-    // }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 10000, // 10 секунд (в миллисекундах)
+          limit: 5,    // 5 запросов
+        },
+      ],
+    }),
     UserModule, PostModule, BlogModule, TestingModule, CoreModule],
   controllers: [AppController],
   providers: [AppService,
