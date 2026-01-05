@@ -64,10 +64,10 @@ export class AuthService {
   async confirmCode(code: string) {
     console.log('confirmCode:', { code });
     const user = await this.usersRepository.findByCode(code);
-    const user1 = await this.usersRepository.findByLogin('Sergee');
+    // const user1 = await this.usersRepository.findByLogin('Sergee');
 
     console.log('confirmCode:', user);
-    console.log('confirmCode2:', user1);
+    // console.log('confirmCode2:', user1);
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,

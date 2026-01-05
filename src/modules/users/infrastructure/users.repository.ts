@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { IsNull, MoreThan, Repository } from 'typeorm';
 import { User } from '../domain/user.entity';
 import { DomainException } from '../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
@@ -57,14 +57,31 @@ export class UsersRepository {
   }
 
   async findByCode(code: string): Promise<User | null> {
-    return this.userRepo
-      .createQueryBuilder('u')
-      .where('u.emailConfirmationCode = :code', { code })
-      .andWhere('u.emailConfirmationExpirationDate > :now', {
-        now: new Date(),
-      })
-      .andWhere('u.deletedAt IS NULL')
-      .getOne();
+    console.log('findByCode called with code:', code);
+
+    // Вариант 1: Использование embedded entity пути
+    const user = await this.userRepo.findOne({
+      where: {
+        emailConfirmation: {
+          confirmationCode: code,
+          expirationDate: MoreThan(new Date()),
+        },
+        deletedAt: IsNull(),
+      },
+    });
+
+    // Вариант 2: Если хотите использовать QueryBuilder
+    // const user = await this.userRepo
+    //   .createQueryBuilder('u')
+    //   .where('u.emailConfirmationConfirmationCode = :code', { code })
+    //   .andWhere('u.emailConfirmationExpirationDate > :now', {
+    //     now: new Date(),
+    //   })
+    //   .andWhere('u.deletedAt IS NULL')
+    //   .getOne();
+
+    console.log('findByCode result:', user ? `Found user ${user.id}` : 'Not found');
+    return user;
   }
 
   async findByLoginOrEmail(
