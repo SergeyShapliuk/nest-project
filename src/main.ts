@@ -4,11 +4,14 @@ import { appSetup } from './setup/app.setup';
 import localtunnel from 'localtunnel';
 import ngrok from 'ngrok';
 import cookieParser from 'cookie-parser';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const port = parseInt(process.env.PORT || '5001', 10);
+
+  app.set('trust proxy', true);
 
   app.use(cookieParser());
   app.enableCors();
