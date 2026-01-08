@@ -14,7 +14,7 @@ export class PostsRepository {
   async findById(id: string): Promise<Post | null> {
     console.log('id', id);
     return this.postRepository.findOne({
-      where: { id, deletedAt: IsNull() },
+      where: { id},
     });
   }
 
