@@ -70,7 +70,7 @@ export class BlogsController {
   // @UseGuards(JwtOptionalAuthGuard)
   @ApiParam({ name: 'id', type: 'string' })
   @Get(':id')
-  async getBlogId(@Param('blogId') id: string): Promise<BlogViewDto> {
+  async getBlogId(@Param('id') id: string): Promise<BlogViewDto> {
     // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
     console.log('getBlogId', id);
     return this.queryBus.execute(new GetBlogByIdQuery(id));
