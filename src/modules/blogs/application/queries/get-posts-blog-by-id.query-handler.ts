@@ -1,8 +1,5 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
-import { Types } from 'mongoose';
-import { BlogViewDto } from '../../api/view-dto/blogs.view-dto';
-import { BlogsQwRepository } from '../../infrastructure/query/blogs.query.repository';
 import { BlogsRepository } from '../../infrastructure/blogs.repository';
 import { PostsByBlogIdQueryRepository } from '../../../posts/infrastructure/query/posts.by.blog.id.query.repository';
 import { GetPostsQueryParams } from '../../../posts/api/input-dto/get-posts-query-params.input-dto';
@@ -30,7 +27,7 @@ export class GetPostsBlogByIdQueryHandler
 
   async execute(query: GetPostsBlogByIdQuery): Promise<PaginatedViewDto<PostViewDto[]>> {
     console.log('GetBlogByIdQueryHandler', query);
-    await this.blogsRepository.findOrNotFoundFail(new Types.ObjectId(query.id));
+    await this.blogsRepository.findOrNotFoundFail(query.id);
 
     return this.postsByBlogIdQueryRepository.getPostsByBlogId(query.queryParams, query.id, query.userId);
   }

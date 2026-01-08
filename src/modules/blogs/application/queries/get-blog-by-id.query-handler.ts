@@ -1,17 +1,14 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
-import { Types } from 'mongoose';
 import { BlogViewDto } from '../../api/view-dto/blogs.view-dto';
 import { BlogsQwRepository } from '../../infrastructure/query/blogs.query.repository';
 import { BlogsRepository } from '../../infrastructure/blogs.repository';
-import { UsersExternalQueryRepository } from '../../../users/infrastructure/external-query/users.external-query-repository';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
 
 export class GetBlogByIdQuery {
   constructor(
-    public id: Types.ObjectId,
-    public userId: Types.ObjectId | null,
+    public id: string,
   ) {}
 }
 

@@ -1,53 +1,52 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
-import { UpdatePostDto } from '../dto/update-post.dto';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, BaseEntity } from 'typeorm';
 import { CreatePostLikeDomainDto } from './dto/create-post.like.domain.dto';
 
+@Entity('post_likes')
+export class PostLike extends BaseEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-@Schema({ timestamps: true }) // timestamps добавит createdAt и updatedAt автоматически
-export class PostLike {
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 36, nullable: false })
   userId: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   login: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 36, nullable: false })
   postId: string;
 
-  @Prop({ type: String, enum: ['None', 'Like', 'Dislike'], default: 'None', required: true })
+  @Column({
+    type: 'enum',
+    enum: ['None', 'Like', 'Dislike'],
+    default: 'None',
+    nullable: false
+  })
   status: 'None' | 'Like' | 'Dislike';
 
-  // Эти поля добавятся автоматически благодаря timestamps: true
+  @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
   updatedAt: Date;
 
-  // // Для мягкого удаления
-  @Prop({ type: Date, default: null })
+  @DeleteDateColumn()
   deletedAt: Date | null;
 
-  get id() {
-    // @ts-ignore
-    return this._id.toString();
-  }
+  static createInstance(dto: CreatePostLikeDomainDto): PostLike {
+    const postLike = new PostLike();
 
-  static createInstance(dto: CreatePostLikeDomainDto): PostLikeDocument {
-    const post = new this();
+    postLike.userId = dto.userId;
+    postLike.login = dto.login;
+    postLike.postId = dto.postId;
+    postLike.status = dto.status;
 
-    post.userId = dto.userId;
-    post.login = dto.login;
-    post.postId = dto.postId;
-    post.status = dto.status;
-
-
-    return post as PostLikeDocument;
+    return postLike;
   }
 
   /**
    * Marks the user as deleted
    * Throws an error if already deleted
    * @throws {Error} If the entity is already deleted
-   * DDD сontinue: инкапсуляция (вызываем методы, которые меняют состояние\св-ва) объектов согласно правилам этого объекта
    */
   makeDeleted() {
     if (this.deletedAt !== null) {
@@ -55,29 +54,4 @@ export class PostLike {
     }
     this.deletedAt = new Date();
   }
-
-  // updatePost(dto: UpdatePostDto) {
-  //   if (dto.title !== this.title) {
-  //     this.title = dto.title;
-  //   }
-  //   if (dto.shortDescription !== this.shortDescription) {
-  //     this.shortDescription = dto.shortDescription;
-  //   }
-  //   if (dto.content !== this.content) {
-  //     this.content = dto.content;
-  //   }
-  //   if (dto.blogId !== this.blogId) {
-  //     this.blogId = dto.blogId;
-  //   }
-  // }
 }
-
-// Создаем схему Mongoose
-export const PostLikeSchema = SchemaFactory.createForClass(PostLike);
-PostLikeSchema.loadClass(PostLike);
-
-// Тип документа Mongoose
-// Types
-export type PostLikeDocument = HydratedDocument<PostLike>;
-export type PostLikeModelType = Model<PostLikeDocument> & typeof PostLike;
-

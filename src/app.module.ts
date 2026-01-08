@@ -29,14 +29,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       autoLoadEntities: true,
       synchronize: true,
     }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 10000, // 10 секунд (в миллисекундах)
-          limit: 5,    // 5 запросов
-        },
-      ],
-    }),
+    // ThrottlerModule.forRoot({
+    //   throttlers: [
+    //     {
+    //       ttl: 10000, // 10 секунд (в миллисекундах)
+    //       limit: 5,    // 5 запросов
+    //     },
+    //   ],
+    // }),
     UserModule, PostModule, BlogModule, TestingModule, CoreModule],
   controllers: [AppController],
   providers: [AppService,
@@ -52,10 +52,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       provide: APP_FILTER,
       useClass: DomainHttpExceptionsFilter,
     },
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard, // Глобальный guard
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: ThrottlerGuard, // Глобальный guard
+    // },
   ],
 })
 export class AppModule {

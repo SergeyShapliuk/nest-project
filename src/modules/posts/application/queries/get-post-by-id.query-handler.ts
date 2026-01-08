@@ -1,13 +1,12 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
-import { Types } from 'mongoose';
 import { PostViewDto } from '../../api/view-dto/posts.view-dto';
 import { PostsQwRepository } from '../../infrastructure/query/posts.query.repository';
 
 export class GetPostByIdQuery {
   constructor(
-    public id: Types.ObjectId,
-    public userId: Types.ObjectId | undefined,
+    public id: string,
+    public userId: string | undefined,
   ) {
   }
 }

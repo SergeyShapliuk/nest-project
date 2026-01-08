@@ -1,6 +1,13 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
 import { UpdatePostDto } from '../dto/update-post.dto';
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 
 export const loginConstraints = {
@@ -18,80 +25,86 @@ export const emailConstraints = {
 };
 
 
-// ==================== SCHEMA (для Mongoose/базы данных) ====================
+// ==================== ENTITY (для TypeORM) ====================
 
-// Схема для вложенного объекта emailConfirmation
-@Schema({ _id: false })
+// Вложенный объект (Embedded/Value Object)
+@Entity()
 export class ExtendedLikesInfo {
-  @Prop({ type: Number, required: true, default: 0 })
+  @Column({ type: 'int', default: 0 })
   likesCount: number;
 
-  @Prop({ type: Number, required: true, default: 0 })
+  @Column({ type: 'int', default: 0 })
   dislikesCount: number;
 
+  // constructor(likesCount = 0, dislikesCount = 0) {
+  //   this.likesCount = likesCount;
+  //   this.dislikesCount = dislikesCount;
+  // }
 }
 
-export const ExtendedLikesInfoSchema =
-  SchemaFactory.createForClass(ExtendedLikesInfo);
+// Основная сущность Post
+@Entity('posts')
+export class Post extends BaseEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-// Основная схема User
-@Schema({ timestamps: true }) // timestamps добавит createdAt и updatedAt автоматически
-export class Post {
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   title: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 500, nullable: false })
   shortDescription: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'text', nullable: false })
   content: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   blogName: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 36, nullable: false }) // uuid length
   blogId: string;
 
-  @Prop({ type: ExtendedLikesInfoSchema, required: true, default: () => ({}) })
+  // Для вложенного объекта в TypeORM используем @Column с type: 'json' или embedded entity
+  // Вариант 1: JSON (проще, но менее типобезопасно)
+  // @Column({ type: 'json', default: { likesCount: 0, dislikesCount: 0 } })
+  // extendedLikesInfo: ExtendedLikesInfo;
+
+  // Вариант 2: Embedded Entity (более типобезопасно)
+  @Column(() => ExtendedLikesInfo)
   extendedLikesInfo: ExtendedLikesInfo;
 
-  // Эти поля добавятся автоматически благодаря timestamps: true
+  @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
   updatedAt: Date;
 
-  // // Для мягкого удаления
-  @Prop({ type: Date, default: null })
+  @DeleteDateColumn()
   deletedAt: Date | null;
 
-  get id() {
-    // @ts-ignore
-    return this._id.toString();
-  }
-
+  // Метод для создания экземпляра
   static createInstance(dto: {
     title: string;
     shortDescription: string;
     content: string;
-    blogName: string;
+    blogName?: string;
     blogId: string;
-  }): PostDocument {
-    const post = new this();
+  }): Post {
+    const post = new Post();
 
     post.title = dto.title;
     post.shortDescription = dto.shortDescription;
     post.content = dto.content;
-    post.blogName = dto.blogName;
+    post.blogName = dto?.blogName || '';
     post.blogId = dto.blogId;
+    post.extendedLikesInfo = new ExtendedLikesInfo(); // Инициализация с дефолтными значениями
 
-
-    return post as PostDocument;
+    return post;
   }
 
   /**
-   * Marks the user as deleted
+   * Marks the post as deleted
    * Throws an error if already deleted
    * @throws {Error} If the entity is already deleted
-   * DDD сontinue: инкапсуляция (вызываем методы, которые меняют состояние\св-ва) объектов согласно правилам этого объекта
    */
   makeDeleted() {
     if (this.deletedAt !== null) {
@@ -115,13 +128,3 @@ export class Post {
     }
   }
 }
-
-// Создаем схему Mongoose
-export const PostSchema = SchemaFactory.createForClass(Post);
-PostSchema.loadClass(Post);
-
-// Тип документа Mongoose
-// Types
-export type PostDocument = HydratedDocument<Post>;
-export type PostModelType = Model<PostDocument> & typeof Post;
-

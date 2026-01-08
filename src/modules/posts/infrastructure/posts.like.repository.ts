@@ -1,44 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
-import { PostLike, PostLikeDocument } from '../domain/post.like.entity';
-import type { PostLikeModelType } from '../domain/post.like.entity';
-import { PostLikeViewDto } from '../api/view-dto/posts.like.view-dto';
-import type { PostModelType } from '../domain/post.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { Post } from '../domain/post.entity';
-
+import { PostLike } from '../domain/post.like.entity';
+import { PostLikeViewDto } from '../api/view-dto/posts.like.view-dto';
 
 @Injectable()
 export class PostsLikeRepository {
-  constructor(@InjectModel(Post.name)
-              private PostModel: PostModelType,
-              @InjectModel(PostLike.name)
-              private PostLikeModel: PostLikeModelType,
+  constructor(
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
+    @InjectRepository(PostLike)
+    private readonly postLikeRepository: Repository<PostLike>,
   ) {
   }
 
-
-  async findLikeById(userId: string, postId: string): Promise<PostLikeDocument | null> {
-    // console.log('id', id);
-    return this.PostLikeModel.findOne({ userId, postId, deletedAt: null });
+  async findLikeById(userId: string, postId: string): Promise<PostLike | null> {
+    return this.postLikeRepository.findOne({
+      where: { userId, postId, deletedAt: IsNull() },
+    });
   }
 
-  // async save(newUser: PostDocument) {
-  //   await newUser.save();
-  // }
-
-  // async findOrNotFoundFail(id: string): Promise<PostDocument> {
-  //   const user = await this.findById(id);
-  //
-  //   if (!user) {
-  //     //TODO: replace with domain exception
-  //     throw new NotFoundException('post not found');
-  //   }
-  //
-  //   return user;
-  // }
-
-  async getUserPostLikeStatus(postId: string, userId?: string): Promise<'Like' | 'Dislike' | 'None'> {
+  async getUserPostLikeStatus(
+    postId: string,
+    userId?: string,
+  ): Promise<'Like' | 'Dislike' | 'None'> {
     if (!userId) return 'None';
 
     const like = await this.findLikeById(userId, postId);
@@ -50,43 +36,38 @@ export class PostsLikeRepository {
     userId?: string,
   ): Promise<Record<string, 'Like' | 'Dislike' | 'None'>> {
     if (!userId || postIds.length === 0) {
-      // Возвращаем 'None' для всех постов
       const result: Record<string, 'Like' | 'Dislike' | 'None'> = {};
-      postIds.forEach(id => result[id] = 'None');
+      postIds.forEach(id => (result[id] = 'None'));
       return result;
     }
 
-    // ОДИН запрос для всех постов!
-    const likes = await this.PostLikeModel.find({
-      postId: { $in: postIds },
-      userId,
-    }).select({ postId: 1, status: 1 }).exec();
+    const likes = await this.postLikeRepository
+      .createQueryBuilder('pl')
+      .select(['pl.postId', 'pl.status'])
+      .where('pl.userId = :userId', { userId })
+      .andWhere('pl.postId IN (:...postIds)', { postIds })
+      .andWhere('pl.deletedAt IS NULL')
+      .getMany();
 
-    // Создаем мап статусов
     const result: Record<string, 'Like' | 'Dislike' | 'None'> = {};
-
-    // Сначала всем ставим 'None'
-    postIds.forEach(id => result[id] = 'None');
-
-    // Затем обновляем найденные
-    likes.forEach(like => {
-      result[like.postId.toString()] = like.status;
-    });
+    postIds.forEach(id => (result[id] = 'None'));
+    likes.forEach(like => (result[like.postId] = like.status));
 
     return result;
   }
 
   async getPostNewestLikes(postId: string): Promise<PostLikeViewDto[]> {
     if (!postId) return [];
+
     console.log({ postId });
-    const likes1 = await this.PostLikeModel.find({ postId });
-    console.log({ likes1 });
-    const likes = await this.PostLikeModel.find({ postId, status: 'Like' })
-      .sort({ createdAt: -1 }) // или addedAt, в зависимости от вашей модели
-      .limit(3)
-      .select({ userId: 1, login: 1, createdAt: 1, _id: 0 })// выбираем нужные поля
-      // .populate("userId", "login") // если login хранится в User модели
-      .exec();
+
+    const likes = await this.postLikeRepository.find({
+      where: { postId, status: 'Like' },
+      order: { createdAt: 'DESC' },
+      take: 3,
+      select: ['userId', 'login', 'createdAt'],
+    });
+
     console.log('getPostNewestLikes', likes);
     return likes.map(PostLikeViewDto.mapToView);
   }
@@ -98,37 +79,40 @@ export class PostsLikeRepository {
 
     console.log('getPostsNewestLikes batch для:', postIds);
 
-    // ОДИН запрос для всех постов!
-    const allLikes = await this.PostLikeModel.find({
-      postId: { $in: postIds },
-      status: 'Like',
-    })
-      .sort({ createdAt: -1 })
-      .select({ userId: 1, login: 1, createdAt: 1, postId: 1, _id: 0 })
-      .exec();
+    // Вариант 1: Используем QueryBuilder вместо raw query (рекомендуется)
+    const allLikes = await this.postLikeRepository
+      .createQueryBuilder('pl')
+      .select(['pl.postId', 'pl.userId', 'pl.login', 'pl.createdAt'])
+      .where('pl.postId IN (:...postIds)', { postIds })
+      .andWhere('pl.status = :status', { status: 'Like' })
+      .andWhere('pl.deletedAt IS NULL')
+      .orderBy('pl.createdAt', 'DESC')
+      .getMany();
 
     console.log('Все лайки полученные batch:', allLikes);
 
     // Группируем лайки по postId
     const grouped: Record<string, PostLikeViewDto[]> = {};
-
-    // Инициализируем для всех postIds пустые массивы
-    postIds.forEach(id => grouped[id] = []);
+    postIds.forEach(id => (grouped[id] = []));
 
     // Счетчики для ограничения (максимум 3 на пост)
     const counters: Record<string, number> = {};
-    postIds.forEach(id => counters[id] = 0);
+    postIds.forEach(id => (counters[id] = 0));
 
-    // Распределяем лайки по постам (уже отсортированы по дате)
-    for (const like of allLikes) {
-      const postId = like.postId.toString();
-
-      // Берем только первые 3 лайка для каждого поста
+    // Распределяем лайки
+    allLikes.forEach(like => {
+      const postId = like.postId;
       if (counters[postId] < 3) {
-        grouped[postId].push(PostLikeViewDto.mapToView(like));
+        grouped[postId].push(
+          PostLikeViewDto.mapToView({
+            userId: like.userId,
+            login: like.login,
+            createdAt: like.createdAt,
+          } as PostLike),
+        );
         counters[postId]++;
       }
-    }
+    });
 
     console.log('Сгруппированные лайки:', grouped);
     return grouped;
@@ -140,54 +124,140 @@ export class PostsLikeRepository {
     login: string,
     likeStatus: 'Like' | 'Dislike' | 'None',
   ): Promise<void> {
-    const current = await this.PostLikeModel.findOne({ userId, postId });
+    const current = await this.postLikeRepository.findOne({
+      where: { userId, postId },
+    });
 
     // Если статус не изменился — ничего не делать
     if (current?.status === likeStatus) {
       return;
     }
 
-    // Удаляем предыдущую реакцию если была
-    if (current) {
-      await this.PostLikeModel.deleteOne({ userId, postId });
+    // Начинаем транзакцию
+    const queryRunner = this.postLikeRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-      // Уменьшаем счетчик предыдущей реакции
-      if (current.status === 'Like') {
-        await this.PostModel.updateOne(
-          { _id: postId },
-          { $inc: { 'extendedLikesInfo.likesCount': -1 } },
-        );
-      } else if (current.status === 'Dislike') {
-        await this.PostModel.updateOne(
-          { _id: postId },
-          { $inc: { 'extendedLikesInfo.dislikesCount': -1 } },
-        );
+    try {
+      // Удаляем предыдущую реакцию если была
+      if (current) {
+        await queryRunner.manager.softDelete(PostLike, { userId, postId });
+
+        // Уменьшаем счетчик предыдущей реакции
+        if (current.status === 'Like') {
+          await queryRunner.manager.decrement(
+            Post,
+            { id: postId },
+            'extendedLikesInfo.likesCount',
+            1,
+          );
+        } else if (current.status === 'Dislike') {
+          await queryRunner.manager.decrement(
+            Post,
+            { id: postId },
+            'extendedLikesInfo.dislikesCount',
+            1,
+          );
+        }
       }
-    }
 
-    // Добавляем новую реакцию если не "None"
-    if (likeStatus !== 'None') {
-      await this.PostLikeModel.create({
-        userId,
-        postId,
-        login,
-        status: likeStatus, // ✅ ДОБАВИТЬ статус
-        createdAt: new Date().toISOString(),
-      });
+      // Добавляем новую реакцию если не "None"
+      if (likeStatus !== 'None') {
+        const newLike = this.postLikeRepository.create({
+          userId,
+          postId,
+          login,
+          status: likeStatus,
+          createdAt: new Date(),
+        });
 
-      // Увеличиваем счетчик новой реакции
-      if (likeStatus === 'Like') {
-        await this.PostModel.updateOne(
-          { _id: postId },
-          { $inc: { 'extendedLikesInfo.likesCount': 1 } },
-        );
-      } else if (likeStatus === 'Dislike') {
-        await this.PostModel.updateOne(
-          { _id: postId },
-          { $inc: { 'extendedLikesInfo.dislikesCount': 1 } },
-        );
+        await queryRunner.manager.save(newLike);
+
+        // Увеличиваем счетчик новой реакции
+        if (likeStatus === 'Like') {
+          await queryRunner.manager.increment(
+            Post,
+            { id: postId },
+            'extendedLikesInfo.likesCount',
+            1,
+          );
+        } else if (likeStatus === 'Dislike') {
+          await queryRunner.manager.increment(
+            Post,
+            { id: postId },
+            'extendedLikesInfo.dislikesCount',
+            1,
+          );
+        }
       }
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
   }
 
+  // Альтернативная версия без транзакции (если не нужно атомарное обновление)
+  async updateLikeStatusSimple(
+    postId: string,
+    userId: string,
+    login: string,
+    likeStatus: 'Like' | 'Dislike' | 'None',
+  ): Promise<void> {
+    const current = await this.postLikeRepository.findOne({
+      where: { userId, postId },
+    });
+
+    if (current?.status === likeStatus) {
+      return;
+    }
+
+    // Удаляем предыдущую реакцию
+    if (current) {
+      await this.postLikeRepository.softDelete({ userId, postId });
+
+      // Обновляем счетчики в посте
+      const post = await this.postRepository.findOne({ where: { id: postId } });
+      if (post && post.extendedLikesInfo) {
+        if (current.status === 'Like') {
+          post.extendedLikesInfo.likesCount = Math.max(0, post.extendedLikesInfo.likesCount - 1);
+        } else if (current.status === 'Dislike') {
+          post.extendedLikesInfo.dislikesCount = Math.max(0, post.extendedLikesInfo.dislikesCount - 1);
+        }
+        await this.postRepository.save(post);
+      }
+    }
+
+    // Добавляем новую реакцию
+    if (likeStatus !== 'None') {
+      const newLike = this.postLikeRepository.create({
+        userId,
+        postId,
+        login,
+        status: likeStatus,
+        createdAt: new Date(),
+      });
+
+      await this.postLikeRepository.save(newLike);
+
+      // Обновляем счетчики
+      const post = await this.postRepository.findOne({ where: { id: postId } });
+      if (post) {
+        if (!post.extendedLikesInfo) {
+          post.extendedLikesInfo = { likesCount: 0, dislikesCount: 0 };
+        }
+
+        if (likeStatus === 'Like') {
+          post.extendedLikesInfo.likesCount += 1;
+        } else if (likeStatus === 'Dislike') {
+          post.extendedLikesInfo.dislikesCount += 1;
+        }
+
+        await this.postRepository.save(post);
+      }
+    }
+  }
 }

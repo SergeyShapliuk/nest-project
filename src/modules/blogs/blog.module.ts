@@ -1,8 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { BlogsController } from './api/blogs.controller';
 import { BlogsRepository } from './infrastructure/blogs.repository';
-import { BlogSchema, Blog } from './domain/blog.entity';
 import { BlogsQwRepository } from './infrastructure/query/blogs.query.repository';
 import { PostModule } from '../posts/post.module';
 import { CreateBlogUseCase } from './application/usecases/create-blog.usecase';
@@ -12,11 +10,18 @@ import { DeleteBlogUseCase } from './application/usecases/delete-blog.usecase';
 import { GetBlogByIdQueryHandler } from './application/queries/get-blog-by-id.query-handler';
 import { GetBlogsQueryHandler } from './application/queries/get-blogs.query-handler';
 import { GetPostsBlogByIdQueryHandler } from './application/queries/get-posts-blog-by-id.query-handler';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Blog } from './domain/blog.entity';
+import { PostsRepository } from '../posts/infrastructure/posts.repository';
+import { Post } from '../posts/domain/post.entity';
+import { SuperAdminBlogsController } from './api/super.admin.blogs.controller';
+import { UpdatePostByBlogUseCase } from './application/usecases/update-post-by-blog.usecase';
 
 const commandHandlers = [
   CreateBlogUseCase,
   CreatePostByBlogIdUseCase,
   UpdateBlogUseCase,
+  UpdatePostByBlogUseCase,
   DeleteBlogUseCase,
 ];
 
@@ -24,10 +29,10 @@ const queryHandlers = [GetBlogByIdQueryHandler, GetBlogsQueryHandler, GetPostsBl
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Blog.name, schema: BlogSchema }]), forwardRef(() => PostModule)],
-  controllers: [BlogsController],
+    TypeOrmModule.forFeature([Blog, Post]), forwardRef(() => PostModule)],
+  controllers: [BlogsController, SuperAdminBlogsController],
   providers: [...commandHandlers, ...queryHandlers,
-    BlogsRepository, BlogsQwRepository,
+    BlogsRepository, BlogsQwRepository, PostsRepository,
   ],
   exports: [BlogsRepository],
 })

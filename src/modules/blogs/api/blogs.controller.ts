@@ -21,7 +21,6 @@ import { CreatePostByBlogInputDto } from '../../posts/api/input-dto/posts.by.blo
 import { UpdateBlogInputDto } from './input-dto/update-blog.input-dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { JwtOptionalAuthGuard } from '../../users/guards/bearer/jwt-optional-auth.guard';
-import { Types } from 'mongoose';
 import { ExtractUserIfExistsFromRequest } from '../../users/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 import { UserContextDto } from '../../users/guards/dto/user-context.dto';
 import { GetBlogsQuery } from '../application/queries/get-blogs.query-handler';
@@ -30,7 +29,6 @@ import { UpdateBlogCommand } from '../application/usecases/update-blog.usecase';
 import { DeleteBlogCommand } from '../application/usecases/delete-blog.usecase';
 import { CreateBlogCommand } from '../application/usecases/create-blog.usecase';
 import { CreatePostByBlogIdCommand } from '../application/usecases/create-post-by-blog-id.usecase';
-import { PostsService } from '../../posts/application/posts.service';
 import { CreateBlogInputDto } from './input-dto/create-blog.input-dto';
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
 import {
@@ -47,14 +45,13 @@ export class BlogsController {
               // private blogsService: BlogsService,
               // private blogsRepository: SessionRepository,
               // private blogsQwRepository: BlogsQwRepository,
-              private postsService: PostsService,
               // private postsQwRepository: PostsQwRepository,
               // private postsByBlogIdQueryRepository: PostsByBlogIdQueryRepository
   ) {
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(JwtOptionalAuthGuard)
   @Get()
   async getAll(@Query() query: GetBlogsQueryParams): Promise<PaginatedViewDto<BlogViewDto[]>> {
     // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
@@ -69,48 +66,43 @@ export class BlogsController {
     return this.queryBus.execute(new GetBlogsQuery(query));
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(JwtOptionalAuthGuard)
   @ApiParam({ name: 'id', type: 'string' })
-  @Get(':blogId')
-  async getBlogId(@Param('blogId') blogId: string,
-                  @ExtractUserIfExistsFromRequest() user: { id: string } | null): Promise<BlogViewDto> {
+  @Get(':id')
+  async getBlogId(@Param('blogId') id: string): Promise<BlogViewDto> {
     // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
-    console.log('getBlogId', blogId);
-    console.log('getBlogIdUser', user);
-    const blogObjectId = new Types.ObjectId(blogId);
-    const userObjectId = new Types.ObjectId(user?.id || '');
-    // return this.blogsQwRepository.getByIdOrNotFoundFail(blogId);
-    return this.queryBus.execute(new GetBlogByIdQuery(blogObjectId, userObjectId  || null));
+    console.log('getBlogId', id);
+    return this.queryBus.execute(new GetBlogByIdQuery(id));
   }
 
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
-  @Post()
-  async createBlog(@Body() body: CreateBlogInputDto): Promise<BlogViewDto> {
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
+  // @Post()
+  // async createBlog(@Body() body: CreateBlogInputDto): Promise<BlogViewDto> {
+  //
+  //   try {
+  //     const id = await this.commandBus.execute<CreateBlogCommand,
+  //       Types.ObjectId>(new CreateBlogCommand(body));
+  //
+  //     return this.queryBus.execute(new GetBlogByIdQuery(id, null));
+  //   } catch {
+  //     // queryBus как и commandBus если мы ставим await дожидаются, когда хендлер отработает.
+  //     // и можем таким способом отловить ошибку, анпример, или просто дождаться исполнения,
+  //     // в отличие от eventBus
+  //     // почему так? потому что у command/query один обработчик, а у
+  //     // event-а может быть много обработчиков.
+  //     console.log('😭');
+  //     throw new InternalServerErrorException();
+  //   }
+  //   // const createdBlogId = await this.blogsService.createBlog(body);
+  //   //
+  //   // return this.blogsQwRepository.getByIdOrNotFoundFail(createdBlogId);
+  //
+  // }
 
-    try {
-      const id = await this.commandBus.execute<CreateBlogCommand,
-        Types.ObjectId>(new CreateBlogCommand(body));
-
-      return this.queryBus.execute(new GetBlogByIdQuery(id, null));
-    } catch {
-      // queryBus как и commandBus если мы ставим await дожидаются, когда хендлер отработает.
-      // и можем таким способом отловить ошибку, анпример, или просто дождаться исполнения,
-      // в отличие от eventBus
-      // почему так? потому что у command/query один обработчик, а у
-      // event-а может быть много обработчиков.
-      console.log('😭');
-      throw new InternalServerErrorException();
-    }
-    // const createdBlogId = await this.blogsService.createBlog(body);
-    //
-    // return this.blogsQwRepository.getByIdOrNotFoundFail(createdBlogId);
-
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(JwtOptionalAuthGuard)
   @ApiParam({ name: 'id', type: 'string' })
   @Get(':blogId/posts')
   async getPostsByBlogId(@Query() query: GetPostsQueryParams, @Param('blogId') blogId: string,
@@ -124,43 +116,43 @@ export class BlogsController {
 
   }
 
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
-  @Post(':blogId/posts')
-  async createPostByBlog(@Param('blogId') blogId: string, @Body() body: CreatePostByBlogInputDto): Promise<PostViewDto> {
-    const postData = {
-      ...body,
-      blogId, // добавляем blogId в данные
-    };
-    console.log('createPostByBlog', body);
-    console.log('createPostByBlog2', blogId);
-
-    return this.commandBus.execute(new CreatePostByBlogIdCommand(postData));
-  }
-
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
-  @Put(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async updateBlog(
-    @Param('id') id: string,
-    @Body() body: UpdateBlogInputDto,
-  ): Promise<void> {
-    // const blogId = await this.blogsService.updateBlog(id, body);
-    const objectId = new Types.ObjectId(id);
-    return this.commandBus.execute(new UpdateBlogCommand(objectId, body));
-  }
-
-  @ApiParam({ name: 'id' }) //для сваггер
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteBlog(@Param('id') id: string): Promise<void> {
-    console.log('deleteBlogController', id);
-    const objectId = new Types.ObjectId(id);
-    return this.commandBus.execute(new DeleteBlogCommand(objectId));
-
-  }
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
+  // @Post(':blogId/posts')
+  // async createPostByBlog(@Param('blogId') blogId: string, @Body() body: CreatePostByBlogInputDto): Promise<PostViewDto> {
+  //   const postData = {
+  //     ...body,
+  //     blogId, // добавляем blogId в данные
+  //   };
+  //   console.log('createPostByBlog', body);
+  //   console.log('createPostByBlog2', blogId);
+  //
+  //   return this.commandBus.execute(new CreatePostByBlogIdCommand(postData));
+  // }
+  //
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
+  // @Put(':id')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async updateBlog(
+  //   @Param('id') id: string,
+  //   @Body() body: UpdateBlogInputDto,
+  // ): Promise<void> {
+  //   // const blogId = await this.blogsService.updateBlog(id, body);
+  //   const objectId = new Types.ObjectId(id);
+  //   return this.commandBus.execute(new UpdateBlogCommand(objectId, body));
+  // }
+  //
+  // @ApiParam({ name: 'id' }) //для сваггер
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
+  // @Delete(':id')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async deleteBlog(@Param('id') id: string): Promise<void> {
+  //   console.log('deleteBlogController', id);
+  //   const objectId = new Types.ObjectId(id);
+  //   return this.commandBus.execute(new DeleteBlogCommand(objectId));
+  //
+  // }
 
 }

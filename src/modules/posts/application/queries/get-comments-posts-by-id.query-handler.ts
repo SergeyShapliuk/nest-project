@@ -1,5 +1,4 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Types } from 'mongoose';
 import { CommentViewDto } from '../../../coments/api/view-dto/comments.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { CommentsQwRepository } from '../../../coments/inftastructure/query/comments.query.repository';
@@ -9,8 +8,8 @@ import { PostsRepository } from '../../infrastructure/posts.repository';
 export class GetCommentsByPostIdQuery {
   constructor(
     public queryParams: GetCommentQueryParams,
-    public postId: Types.ObjectId,
-    public userId: Types.ObjectId | undefined,
+    public postId: string,
+    public userId: string | undefined,
   ) {
   }
 }

@@ -1,76 +1,103 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Brackets } from 'typeorm';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { FilterQuery } from 'mongoose';
 import { Post } from '../../domain/post.entity';
-import type { PostModelType } from '../../domain/post.entity';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
-import { PostViewDto } from '../../api/view-dto/posts.view-dto';
+import { PostViewDto, LikeStatus } from '../../api/view-dto/posts.view-dto';
 import { PostsLikeRepository } from '../posts.like.repository';
-
 
 @Injectable()
 export class PostsByBlogIdQueryRepository {
   constructor(
-    @InjectModel(Post.name) private PostModel: PostModelType,
-    private postsLikeRepository: PostsLikeRepository,
-  ) {
-  }
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
+    private readonly postsLikeRepository: PostsLikeRepository,
+  ) {}
 
   async getPostsByBlogId(
     queryDto: GetPostsQueryParams,
     blogId: string,
     userId?: string,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-
     console.log('getPostsByBlogId', queryDto);
     console.log('getPostsByBlogId2', blogId);
 
-    const orConditions: any[] = [];
-    const filter: FilterQuery<Post> = {
-      blogId,
-      deletedAt: null,
-    };
+    const {
+      pageNumber,
+      pageSize,
+      sortBy,
+      sortDirection,
+    } = queryDto;
 
-    if (orConditions.length > 0) {
-      filter.$or = orConditions;
-    }
-    // const filter = orConditions.length > 0 ? { $or: orConditions } : {};
+    const qb = this.postRepository
+      .createQueryBuilder('p')
+      .where('p.deletedAt IS NULL')
+      .andWhere('p.blogId = :blogId', { blogId });
 
-    const sortDirectionNumber = queryDto.sortDirection === 'asc' ? 1 : -1;
+    /* ========= SEARCH ========= */
 
-    const posts = await this.PostModel
-      .find(filter)
-      // .collation({locale: "en", strength: 2})
-      .sort({ [queryDto.sortBy]: sortDirectionNumber })
-      .skip(queryDto.calculateSkip())
-      .limit(queryDto.pageSize);
-    // .toArray();
+    // if (queryDto.searchTitleTerm) {
+    //   qb.andWhere(
+    //     new Brackets(qb2 => {
+    //       qb2.where('p.title ILIKE :searchTitle', {
+    //         searchTitle: `%${queryDto.searchTitleTerm.trim()}%`,
+    //       });
+    //     })
+    //   );
+    // }
 
-    const totalCount = await this.PostModel.countDocuments(filter);
+    /* ========= SORT ========= */
 
-    // Получаем все необходимые данные о лайках
-    const postIds = posts.map(post => post._id.toString());
+    const safeSortBy = this.validateSortBy(sortBy);
+    qb.orderBy(
+      `p.${safeSortBy}`,
+      sortDirection.toUpperCase() as 'ASC' | 'DESC',
+    );
+
+    /* ========= PAGINATION ========= */
+
+    qb.skip(queryDto.calculateSkip()).take(pageSize);
+
+    /* ========= EXECUTE ========= */
+
+    const [posts, totalCount] = await qb.getManyAndCount();
+
+    /* ========= PROCESS LIKES ========= */
+
+    const postIds = posts.map(post => post.id);
     const [statusesMap, newestLikesMap] = await Promise.all([
       this.postsLikeRepository.getUserPostLikeStatuses(postIds, userId),
       this.postsLikeRepository.getPostsNewestLikes(postIds),
     ]);
-    // Маппим синхронно (без дополнительных запросов к БД)
+
     const items = posts.map(post => {
-      const postId = post._id.toString();
       return PostViewDto.mapToView(
         post,
-        statusesMap[postId] || 'None',
-        newestLikesMap[postId] || [],
+        statusesMap[post.id] || 'None',
+        newestLikesMap[post.id] || [],
       );
     });
 
     return PaginatedViewDto.mapToView({
       items,
       totalCount,
-      page: queryDto.pageNumber,
-      size: queryDto.pageSize,
+      page: pageNumber,
+      size: pageSize,
     });
   }
 
+  // Вспомогательный метод для валидации поля сортировки
+  private validateSortBy(sortBy: string): string {
+    const allowedSortFields = [
+      'title',
+      'shortDescription',
+      'content',
+      'blogName',
+      'createdAt',
+      'updatedAt',
+    ];
+
+    return allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+  }
 }

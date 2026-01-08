@@ -1,5 +1,4 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Types } from 'mongoose';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { CommentCreateInputDto } from '../../../coments/api/input-dto/comment-create.input';
 import { CommentViewDto } from '../../../coments/api/view-dto/comments.view-dto';
@@ -13,8 +12,8 @@ import { InjectModel } from '@nestjs/mongoose';
 export class CreateCommentByPostIdCommand {
   constructor(
     public dto: CommentCreateInputDto,
-    public postId: Types.ObjectId,
-    public userId: Types.ObjectId | undefined) {
+    public postId: string,
+    public userId: string | undefined) {
   }
 }
 

@@ -1,34 +1,46 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import type { PostModelType } from '../domain/post.entity';
-import { Post, PostDocument } from '../domain/post.entity';
-import { Types } from 'mongoose';
-
+import { InjectRepository } from '@nestjs/typeorm';
+import { IsNull, Repository } from 'typeorm';
+import { Post } from '../domain/post.entity';
 
 @Injectable()
 export class PostsRepository {
-  constructor(@InjectModel(Post.name) private PostModel: PostModelType) {
+  constructor(
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
+  ) {
   }
 
-
-  async findById(id: Types.ObjectId): Promise<PostDocument | null> {
+  async findById(id: string): Promise<Post | null> {
     console.log('id', id);
-    return this.PostModel.findOne({ _id: id, deletedAt: null });
+    return this.postRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
   }
 
-  async save(newUser: PostDocument) {
-    await newUser.save();
+  async save(post: Post): Promise<Post> {
+    return this.postRepository.save(post);
   }
 
-  async findOrNotFoundFail(id: Types.ObjectId): Promise<PostDocument> {
+  async findOrNotFoundFail(id: string): Promise<Post> {
     const post = await this.findById(id);
 
     if (!post) {
-      //TODO: replace with domain exception
       throw new NotFoundException('post not found');
     }
 
     return post;
   }
 
+  // posts.repository.ts
+  async create(dto: {
+    title: string;
+    shortDescription: string;
+    content: string;
+    blogId: string;
+    blogName?: string;
+  }): Promise<Post> {
+    const post = Post.createInstance(dto);
+    return this.postRepository.save(post);
+  }
 }

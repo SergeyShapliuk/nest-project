@@ -1,26 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import type { BlogModelType } from '../domain/blog.entity';
-import { Blog,  BlogDocument } from '../domain/blog.entity';
-import { Types } from 'mongoose';
-
+import { InjectRepository } from '@nestjs/typeorm';
+import { IsNull, Repository } from 'typeorm';
+import { Blog } from '../domain/blog.entity';
 
 @Injectable()
 export class BlogsRepository {
-  constructor(@InjectModel(Blog.name) private BlogModel: BlogModelType) {
+  constructor(
+    @InjectRepository(Blog)
+    private readonly blogRepository: Repository<Blog>,
+  ) {
   }
 
-
-  async findById(id: Types.ObjectId): Promise<BlogDocument | null> {
+  async findById(id: string): Promise<Blog | null> {
     console.log('id', id);
-    return this.BlogModel.findOne({ _id: id, deletedAt: null });
+    return this.blogRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
   }
 
-  async save(newBlog: BlogDocument) {
-    await newBlog.save();
+  async save(blog: Blog): Promise<Blog> {
+    return this.blogRepository.save(blog);
   }
 
-  async findOrNotFoundFail(id: Types.ObjectId): Promise<BlogDocument> {
+  async findOrNotFoundFail(id: string): Promise<Blog> {
     const blog = await this.findById(id);
 
     if (!blog) {
@@ -31,4 +33,34 @@ export class BlogsRepository {
     return blog;
   }
 
+  //Дополнительные полезные методы
+  async create(dto: {
+    name: string;
+    description: string;
+    websiteUrl: string;
+    isMembership?: boolean;
+  }): Promise<Blog> {
+    const blog = Blog.createInstance(dto);
+    return this.blogRepository.save(blog);
+  }
+
+  // async update(id: string, updateData: Partial<Blog>): Promise<Blog | null> {
+  //   await this.blogRepository.update(id, updateData);
+  //   return this.findById(id);
+  // }
+  //
+  // async remove(id: string): Promise<void> {
+  //   await this.blogRepository.softDelete(id);
+  // }
+  //
+  // async findAll(): Promise<Blog[]> {
+  //   return this.blogRepository.find();
+  // }
+  //
+  // async exists(id: string): Promise<boolean> {
+  //   const count = await this.blogRepository.count({
+  //     where: { id, deletedAt: null },
+  //   });
+  //   return count > 0;
+  // }
 }

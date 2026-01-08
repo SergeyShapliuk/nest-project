@@ -1,7 +1,13 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
 import { CreateBlogDomainDto } from './dto/create-blog.domain.dto';
 import { UpdateBlogDto } from '../dto/update-blog.dto';
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn, Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 
 export const loginConstraints = {
@@ -35,53 +41,48 @@ export const emailConstraints = {
 // export const ExtendedLikesInfoSchema =
 //   SchemaFactory.createForClass(ExtendedLikesInfo);
 
-// Основная схема User
-@Schema({ timestamps: true }) // timestamps добавит createdAt и updatedAt автоматически
-export class Blog {
-  @Prop({ type: String, required: true })
+@Entity('blogs')
+export class Blog extends BaseEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: false })
   name: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 500, nullable: false })
   description: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   websiteUrl: string;
 
-  @Prop({ type: Boolean, required: true, default: false })
+  @Column({ type: 'boolean', default: false })
   isMembership: boolean;
 
-  // @Prop({ type: ExtendedLikesInfoSchema, required: true })
-  // emailConfirmation: ExtendedLikesInfo;
-
-  // Эти поля добавятся автоматически благодаря timestamps: true
+  @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
   updatedAt: Date;
 
-  // // Для мягкого удаления
-  @Prop({ type: Date, default: null })
+  @DeleteDateColumn()
   deletedAt: Date | null;
 
-  get id() {
-    // @ts-ignore
-    return this._id.toString();
-  }
-
-  static createInstance(dto: CreateBlogDomainDto): BlogDocument {
-    const blog = new this();
+  // Статический метод для создания экземпляра
+  static createInstance(dto: CreateBlogDomainDto): Blog {
+    const blog = new Blog();
 
     blog.name = dto.name;
     blog.description = dto.description;
     blog.websiteUrl = dto.websiteUrl;
-    // blog.isMembership = dto.isMembership;
+    // blog.isMembership = dto.isMembership || false;
 
-    return blog as BlogDocument;
+    return blog;
   }
 
   /**
-   * Marks the user as deleted
+   * Marks the blog as deleted
    * Throws an error if already deleted
    * @throws {Error} If the entity is already deleted
-   * DDD сontinue: инкапсуляция (вызываем методы, которые меняют состояние\св-ва) объектов согласно правилам этого объекта
    */
   makeDeleted() {
     if (this.deletedAt !== null) {
@@ -90,25 +91,15 @@ export class Blog {
     this.deletedAt = new Date();
   }
 
-  update(dto:UpdateBlogDto) {
-    if (dto.name !== this.name) {
+  update(dto: UpdateBlogDto) {
+    if (dto.name && dto.name !== this.name) {
       this.name = dto.name;
     }
-    if (dto.description !== this.description) {
+    if (dto.description && dto.description !== this.description) {
       this.description = dto.description;
     }
-    if (dto.websiteUrl !== this.websiteUrl) {
+    if (dto.websiteUrl && dto.websiteUrl !== this.websiteUrl) {
       this.websiteUrl = dto.websiteUrl;
     }
   }
 }
-
-// Создаем схему Mongoose
-export const BlogSchema = SchemaFactory.createForClass(Blog);
-BlogSchema.loadClass(Blog);
-
-// Тип документа Mongoose
-// Types
-export type BlogDocument = HydratedDocument<Blog>;
-export type BlogModelType = Model<BlogDocument> & typeof Blog;
-

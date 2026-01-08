@@ -1,6 +1,8 @@
 export const VIDEOS_PATH = '/videos';
 export const BLOGS_PATH = '/blogs';
 export const POSTS_PATH = '/posts';
+export const SUPER_ADMIN_BLOGS_PATH = 'sa/blogs';
+export const SUPER_ADMIN_POSTS_PATH = 'sa/posts';
 export const COMMENTS_PATH = '/comments';
 export const USERS_PATH = 'sa/users';
 export const AUTH_PATH = '/auth';

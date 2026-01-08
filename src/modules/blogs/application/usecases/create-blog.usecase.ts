@@ -1,36 +1,28 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Blog } from '../../domain/blog.entity';
-import type { BlogModelType } from '../../domain/blog.entity';
-import { InjectModel } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
-import { BlogsRepository } from '../../infrastructure/blogs.repository';
 import { CreateBlogDto } from '../../dto/create-blog.dto';
+import { BlogsRepository } from '../../infrastructure/blogs.repository';
 
 export class CreateBlogCommand {
-  constructor(public dto: CreateBlogDto) {
-  }
+  constructor(public dto: CreateBlogDto) {}
 }
 
 @CommandHandler(CreateBlogCommand)
 export class CreateBlogUseCase
-  implements ICommandHandler<CreateBlogCommand, Types.ObjectId> {
+  implements ICommandHandler<CreateBlogCommand, string> {
   constructor(
-    @InjectModel(Blog.name)
-    private blogsModel: BlogModelType,
     private blogsRepository: BlogsRepository,
-  ) {
-  }
+  ) {}
 
-  async execute({ dto }: CreateBlogCommand): Promise<Types.ObjectId> {
+  async execute({ dto }: CreateBlogCommand): Promise<string> {
     console.log('❤️ Execute');
-    const entity = this.blogsModel.createInstance(dto);
 
-    // расскоментировать, чтобы увидеть, что там, где мы кидаем команду,
-    // мы можем отловить ошибку, необработанную здесь
-    // throw new Error('oops;');
+    const blog = await this.blogsRepository.create({
+      name: dto.name,
+      description: dto.description,
+      websiteUrl: dto.websiteUrl,
+      // isMembership: dto.isMembership || false,
+    });
 
-    await this.blogsRepository.save(entity);
-
-    return entity._id;
+    return blog.id; // Возвращаем string (UUID) вместо Types.ObjectId
   }
 }

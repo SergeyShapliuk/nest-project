@@ -3,7 +3,7 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
-  UpdateDateColumn,
+  UpdateDateColumn, DeleteDateColumn,
 } from 'typeorm';
 
 
@@ -63,11 +63,7 @@ export class User {
   @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 
-  @Column({
-    type: 'timestamp with time zone',
-    nullable: true,
-    default: null,
-  })
+  @DeleteDateColumn()
   deletedAt: Date | null;
 
   /* ==================== DOMAIN METHODS ==================== */

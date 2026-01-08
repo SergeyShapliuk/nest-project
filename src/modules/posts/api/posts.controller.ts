@@ -11,7 +11,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { PostsService } from '../application/posts.service';
 import { POSTS_PATH } from '../../../core/paths/paths';
 import { PostViewDto } from './view-dto/posts.view-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
@@ -24,7 +23,6 @@ import { JwtOptionalAuthGuard } from '../../users/guards/bearer/jwt-optional-aut
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ExtractUserIfExistsFromRequest } from '../../users/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 import { UserContextDto } from '../../users/guards/dto/user-context.dto';
-import { Types } from 'mongoose';
 import { GetPostsQuery } from '../application/queries/get-posts.query-handler';
 import { GetPostByIdQuery } from '../application/queries/get-post-by-id.query-handler';
 import { CreatePostCommand } from '../application/usecases/create-post.usecase';
@@ -42,105 +40,105 @@ import { UpdateLikeStatusDto } from './input-dto/update-like-status.input-dto';
 
 @Controller(POSTS_PATH)
 export class PostsController {
-  constructor(private postsService: PostsService,
-              private postsQwRepository: PostsQwRepository,
-              private readonly commandBus: CommandBus,
-              private readonly queryBus: QueryBus) {
+  constructor(
+    private postsQwRepository: PostsQwRepository,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus) {
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(JwtOptionalAuthGuard)
   @Get()
   async getAll(@Query() query: GetPostsQueryParams,
-               @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<PaginatedViewDto<PostViewDto[]>> {
+               @ExtractUserIfExistsFromRequest() user: { id: string } | null): Promise<PaginatedViewDto<PostViewDto[]>> {
     console.log('user', user?.id);
-    return this.queryBus.execute<GetPostsQuery, PaginatedViewDto<PostViewDto[]>>(new GetPostsQuery(query, user?.id));
+    return this.queryBus.execute<GetPostsQuery, PaginatedViewDto<PostViewDto[]>>(new GetPostsQuery(query, user?.id || undefined));
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(JwtOptionalAuthGuard)
   @ApiParam({ name: 'id', type: 'string' })
   @Get(':id')
   async getPostId(@Param('id') id: string,
-                  @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<PostViewDto> {
+                  @ExtractUserIfExistsFromRequest() user: { id: string } | null): Promise<PostViewDto> {
     // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
     console.log('getPostId', user);
-    const objectId = new Types.ObjectId(id);
-    return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(new GetPostByIdQuery(objectId, user?.id || undefined));
+
+    return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(new GetPostByIdQuery(id, user?.id || undefined));
 
   }
 
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
-  @Post()
-  async createPost(@Body() body: CreatePostInputDto): Promise<PostViewDto> {
-
-    const postId = await this.commandBus.execute<CreatePostCommand,
-      Types.ObjectId>(new CreatePostCommand(body));
-
-    return this.postsQwRepository.getByIdOrNotFoundFail(postId);
-
-  }
-
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
-  @Put(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async updatePost(
-    @Param('id') id: string,
-    @Body() body: UpdatePostInputDto,
-  ): Promise<void> {
-    const objectId = new Types.ObjectId(id);
-    return this.commandBus.execute<UpdatePostCommand, void>(new UpdatePostCommand(objectId, body));
-  }
-
-  @ApiParam({ name: 'id' }) //для сваггер
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deletePost(@Param('id') id: string): Promise<void> {
-
-    const objectId = new Types.ObjectId(id);
-    return this.commandBus.execute<DeletePostCommand, void>(new DeletePostCommand(objectId));
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
-  @ApiParam({ name: 'id', type: 'string' })
-  @Get('/:postId/comments')
-  async getCommentByPostId(@Query() query: GetCommentQueryParams,
-                           @Param('postId') postId: string,
-                           @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<PaginatedViewDto<CommentViewDto[]>> {
-    // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
-    console.log('getPostId', postId);
-    const objectId = new Types.ObjectId(postId);
-    return this.queryBus.execute<GetCommentsByPostIdQuery, PaginatedViewDto<CommentViewDto[]>>(new GetCommentsByPostIdQuery(query, objectId, user?.id));
-
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Post('/:postId/comments')
-  async createCommentByPost(@Param('postId') postId: string,
-                            @Body() body: CommentCreateInputDto,
-                            @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<CommentViewDto> {
-    const objectId = new Types.ObjectId(postId);
-    return this.commandBus.execute<CreateCommentByPostIdCommand,
-      CommentViewDto>(new CreateCommentByPostIdCommand(body, objectId, user?.id));
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Put('/:postId/like-status')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async updateLikeStatusPost(
-    @Param('postId') postId: string,
-    @Body() body: UpdateLikeStatusDto,
-    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
-  ): Promise<void> {
-    const objectId = new Types.ObjectId(postId);
-    return this.commandBus.execute<UpdatePostLikeStatusCommand, void>(new UpdatePostLikeStatusCommand(body, objectId, user?.id));
-  }
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
+  // @Post()
+  // async createPost(@Body() body: CreatePostInputDto): Promise<PostViewDto> {
+  //
+  //   const postId = await this.commandBus.execute<CreatePostCommand,
+  //     Types.ObjectId>(new CreatePostCommand(body));
+  //
+  //   return this.postsQwRepository.getByIdOrNotFoundFail(postId);
+  //
+  // }
+  //
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
+  // @Put(':id')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async updatePost(
+  //   @Param('id') id: string,
+  //   @Body() body: UpdatePostInputDto,
+  // ): Promise<void> {
+  //   const objectId = new Types.ObjectId(id);
+  //   return this.commandBus.execute<UpdatePostCommand, void>(new UpdatePostCommand(objectId, body));
+  // }
+  //
+  // @ApiParam({ name: 'id' }) //для сваггер
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
+  // @Delete(':id')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async deletePost(@Param('id') id: string): Promise<void> {
+  //
+  //   const objectId = new Types.ObjectId(id);
+  //   return this.commandBus.execute<DeletePostCommand, void>(new DeletePostCommand(objectId));
+  // }
+  //
+  // @ApiBearerAuth()
+  // @UseGuards(JwtOptionalAuthGuard)
+  // @ApiParam({ name: 'id', type: 'string' })
+  // @Get('/:postId/comments')
+  // async getCommentByPostId(@Query() query: GetCommentQueryParams,
+  //                          @Param('postId') postId: string,
+  //                          @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<PaginatedViewDto<CommentViewDto[]>> {
+  //   // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
+  //   console.log('getPostId', postId);
+  //   const objectId = new Types.ObjectId(postId);
+  //   return this.queryBus.execute<GetCommentsByPostIdQuery, PaginatedViewDto<CommentViewDto[]>>(new GetCommentsByPostIdQuery(query, objectId, user?.id));
+  //
+  // }
+  //
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard)
+  // @Post('/:postId/comments')
+  // async createCommentByPost(@Param('postId') postId: string,
+  //                           @Body() body: CommentCreateInputDto,
+  //                           @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<CommentViewDto> {
+  //   const objectId = new Types.ObjectId(postId);
+  //   return this.commandBus.execute<CreateCommentByPostIdCommand,
+  //     CommentViewDto>(new CreateCommentByPostIdCommand(body, objectId, user?.id));
+  // }
+  //
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard)
+  // @Put('/:postId/like-status')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async updateLikeStatusPost(
+  //   @Param('postId') postId: string,
+  //   @Body() body: UpdateLikeStatusDto,
+  //   @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
+  // ): Promise<void> {
+  //   const objectId = new Types.ObjectId(postId);
+  //   return this.commandBus.execute<UpdatePostLikeStatusCommand, void>(new UpdatePostLikeStatusCommand(body, objectId, user?.id));
+  // }
 
 }
