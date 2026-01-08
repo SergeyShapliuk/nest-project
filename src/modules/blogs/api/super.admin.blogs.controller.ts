@@ -52,8 +52,10 @@ export class SuperAdminBlogsController {
   ) {
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtOptionalAuthGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(JwtOptionalAuthGuard)
+  @ApiBasicAuth('basicAuth')
+  @UseGuards(BasicAuthGuard)
   @Get()
   async getAll(@Query() query: GetBlogsQueryParams): Promise<PaginatedViewDto<BlogViewDto[]>> {
     // const queryInput = setDefaultSortAndPaginationIfNotExist(query);

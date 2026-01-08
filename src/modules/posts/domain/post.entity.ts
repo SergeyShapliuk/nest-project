@@ -123,7 +123,7 @@ export class Post extends BaseEntity {
     if (dto.content !== this.content) {
       this.content = dto.content;
     }
-    if (dto.blogId !== this.blogId) {
+    if (dto.blogId && dto.blogId !== this.blogId) {
       this.blogId = dto.blogId;
     }
   }

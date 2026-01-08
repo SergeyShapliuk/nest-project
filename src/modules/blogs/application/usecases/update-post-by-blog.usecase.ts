@@ -37,7 +37,7 @@ export class UpdatePostByBlogUseCase
       // });
     }
 
-    post.updatePost({ ...dto, blogId });
+    post.updatePost(dto);
 
     await this.postsRepository.save(post);
   }
