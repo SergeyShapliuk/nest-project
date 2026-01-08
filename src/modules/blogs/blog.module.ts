@@ -16,6 +16,7 @@ import { PostsRepository } from '../posts/infrastructure/posts.repository';
 import { Post } from '../posts/domain/post.entity';
 import { SuperAdminBlogsController } from './api/super.admin.blogs.controller';
 import { UpdatePostByBlogUseCase } from './application/usecases/update-post-by-blog.usecase';
+import { DeletePostByBlogUseCase } from './application/usecases/delete-post-by-blog.usecase';
 
 const commandHandlers = [
   CreateBlogUseCase,
@@ -23,6 +24,7 @@ const commandHandlers = [
   UpdateBlogUseCase,
   UpdatePostByBlogUseCase,
   DeleteBlogUseCase,
+  DeletePostByBlogUseCase,
 ];
 
 const queryHandlers = [GetBlogByIdQueryHandler, GetBlogsQueryHandler, GetPostsBlogByIdQueryHandler];
