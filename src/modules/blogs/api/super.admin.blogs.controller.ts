@@ -181,7 +181,7 @@ export class SuperAdminBlogsController {
   @UseGuards(BasicAuthGuard)
   @Delete(':blogId/posts/:postId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteBlog(
+  async deletePostByBlog(
     @Param('blogId') blogId: string,
     @Param('postId') postId: string,
   ): Promise<void> {
