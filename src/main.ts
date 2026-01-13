@@ -7,14 +7,15 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { initAppModule } from './init-app-module';
 import { CoreConfig } from './core/config/core.config';
 import { SETTINGS } from './core/settings/settings';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const DynamicAppModule = await initAppModule();
+  const DynamicAppModule = process.env.NODE_ENV === 'production' ? AppModule : await initAppModule();
   const app = await NestFactory.create<NestExpressApplication>(DynamicAppModule);
   const coreConfig = app.get<CoreConfig>(CoreConfig);
 
   // const port = parseInt(coreConfig.port, 10);
-  console.log('maints',coreConfig.port)
+  console.log('maints', coreConfig.port);
   const port = coreConfig.port;
 
   app.set('trust proxy', true);
