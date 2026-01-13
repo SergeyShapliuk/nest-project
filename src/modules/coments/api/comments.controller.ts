@@ -11,13 +11,10 @@ import {
 } from '@nestjs/common';
 import { JwtOptionalAuthGuard } from '../../users/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserFromRequest } from '../../users/guards/decorators/param/extract-user-from-request.decorator';
-import { UserContextDto } from '../../users/guards/dto/user-context.dto';
 import { COMMENTS_PATH } from '../../../core/paths/paths';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Types } from 'mongoose';
 import { JwtAuthGuard } from '../../users/guards/bearer/jwt-auth.guard';
 import { CommentUpdateInputDto } from './input-dto/comment-update.input';
-import { GetBlogByIdQuery } from '../../blogs/application/queries/get-blog-by-id.query-handler';
 import { UpdateCommentCommand } from '../application/usecases/update-comment.usecase';
 import { UpdateCommentLikeStatusCommand } from '../application/usecases/update-comment-like-status.usecase';
 import { DeleteCommentCommand } from '../application/usecases/delete-comment.usecase';
@@ -44,12 +41,12 @@ export class CommentsController {
   @UseGuards(JwtOptionalAuthGuard)
   async getComment(
     @Param('id') id: string,
-    @ExtractUserIfExistsFromRequest() user: UserContextDto,
+    @ExtractUserIfExistsFromRequest() user: { id: string },
   ) {
-    const objectId = new Types.ObjectId(id);
+
     console.log('getComments UserId', user?.id);
     // return this.commentQwRepository.getByIdOrNotFoundFail(id);
-    return this.queryBus.execute(new GetCommentByIdQuery(objectId, user?.id));
+    return this.queryBus.execute(new GetCommentByIdQuery(id, user?.id));
 
   }
 
@@ -61,10 +58,10 @@ export class CommentsController {
   async updateComment(
     @Param('id') id: string,
     @Body() body: CommentUpdateInputDto,
-    @ExtractUserFromRequest() user: UserContextDto,
+    @ExtractUserFromRequest() user: { id: string },
   ): Promise<void> {
-    const objectId = new Types.ObjectId(id);
-    return this.commandBus.execute(new UpdateCommentCommand(objectId, user.id, body));
+
+    return this.commandBus.execute(new UpdateCommentCommand(id, user.id, body));
   }
 
   // PUT /comments/:commentId/like-status
@@ -75,10 +72,10 @@ export class CommentsController {
   async updateLikeStatus(
     @Param('commentId') commentId: string,
     @Body() body: UpdateLikeStatusDto,
-    @ExtractUserFromRequest() user: UserContextDto,
+    @ExtractUserFromRequest() user: { id: string },
   ): Promise<void> {
-    const objectId = new Types.ObjectId(commentId);
-    return this.commandBus.execute(new UpdateCommentLikeStatusCommand(objectId, user.id, body));
+
+    return this.commandBus.execute(new UpdateCommentLikeStatusCommand(commentId, user.id, body));
 
   }
 
@@ -89,10 +86,10 @@ export class CommentsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteComment(
     @Param('id') id: string,
-    @ExtractUserFromRequest() user: UserContextDto,
+    @ExtractUserFromRequest() user: { id: string },
   ): Promise<void> {
-    const objectId = new Types.ObjectId(id);
-    return this.commandBus.execute(new DeleteCommentCommand(objectId, user.id));
+
+    return this.commandBus.execute(new DeleteCommentCommand(id, user.id));
 
   }
 }

@@ -1,26 +1,25 @@
-import { Comment, CommentDocument } from '../domain/comment.entity';
-import type { CommentModelType } from '../domain/comment.entity';
+import { Comment } from '../domain/comment.entity';
 import { Injectable } from '@nestjs/common';
-import { Types } from 'mongoose';
 import { DomainException } from '../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { IsNull, Repository } from 'typeorm';
 
 
 @Injectable()
 export class CommentRepository {
-  constructor(@InjectModel(Comment.name) private CommentModel: CommentModelType) {
+  constructor(@InjectRepository(Comment) private readonly commentRepository: Repository<Comment>) {
   }
 
-  async findById(id: Types.ObjectId): Promise<CommentDocument | null> {
-    return this.CommentModel.findOne({ _id: id, deletedAt: null });
+  async findById(id: string): Promise<Comment | null> {
+    return this.commentRepository.findOne({ where: { id, deletedAt: IsNull() } });
   }
 
-  async save(newComment: CommentDocument) {
-    await newComment.save();
+  async save(newComment: Comment) {
+    await this.commentRepository.save(newComment);
   }
 
-  async findByIdOrFail(id: Types.ObjectId): Promise<CommentDocument> {
+  async findByIdOrFail(id: string): Promise<Comment> {
     console.log({ id });
     const res = await this.findById(id);
 
@@ -33,28 +32,37 @@ export class CommentRepository {
     return res;
   }
 
-
-  async create(newComment: CommentDocument): Promise<string> {
-    const insertResult = await newComment.save();
-    console.log({ insertResult });
-    return insertResult._id.toString();
+  async create(
+    content: string,
+    commentatorInfo: {
+      userId: string | 'unknown',
+      userLogin: string
+    }, postId: string): Promise<string> {
+    const comment = Comment.createInstance(content, commentatorInfo, postId);
+    const savedComment = await this.commentRepository.save(comment);
+    return savedComment.id;
   }
 
+  async update(id: string, updateData: { content: string }): Promise<Comment> {
+    // Находим комментарий
+    const comment = await this.commentRepository.findOne({
+      where: { id },
+    });
 
-  async update(id: string, newComment: { content: string }): Promise<void> {
-    const updateResult = await this.CommentModel.updateOne(
-      {
-        _id: id,
-      },
-      {
-        $set: newComment,
-      },
-    );
-
-    if (updateResult.matchedCount < 1) {
-      // throw new RepositoryNotFoundError('Comment not exist');
+    if (!comment) {
+      throw new DomainException({
+        code: DomainExceptionCode.NotFound,
+        message: `Comment with id ${id} not found`,
+      });
     }
-    return;
+
+    // Используем метод сущности для обновления
+    comment.updateComment(updateData.content);
+
+    // Сохраняем изменения
+    const updatedComment = await this.commentRepository.save(comment);
+
+    return updatedComment;
   }
 
 }

@@ -1,53 +1,75 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity, Index, JoinColumn, ManyToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+  UpdateDateColumn,
+} from 'typeorm';
+import { User } from '../../users/domain/user.entity';
+import { Comment } from './comment.entity';
 
-export type LikeStatus = 'Like' | 'Dislike';
+export enum ReactionStatus {
+  LIKE = 'Like',
+  DISLIKE = 'Dislike',
+  NONE = 'None'
+}
 
-@Schema({ timestamps: true })
+@Entity('comment_likes')
+@Unique(['user', 'comment'])
+@Index(['user', 'comment'])
+@Index(['comment', 'status'])
 export class CommentLike {
-  @Prop({ type: String, required: true })
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @Column({ type: 'uuid' })
   userId: string;
 
-  @Prop({ type: String, required: true })
+  @ManyToOne(() => Comment, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'comment_id' })
+  comment: Comment;
+
+  @Column({ type: 'uuid' })
   commentId: string;
 
-  @Prop({
-    type: String,
-    enum: ['Like', 'Dislike'],
-    required: true
+  @Column({
+    type: 'enum',
+    enum: ReactionStatus,
+    default: ReactionStatus.NONE,
   })
-  status: LikeStatus;
+  status: 'Like' | 'Dislike' | 'None';
 
-  @Prop({ type: Date, default: Date.now })
+  @CreateDateColumn()
   createdAt: Date;
 
-  get id() {
-    // @ts-ignore
-    return this._id.toString();
-  }
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 
   static createInstance(
     userId: string,
     commentId: string,
-    status: LikeStatus
-  ): CommentLikeDocument {
+    status: ReactionStatus,
+  ): CommentLike {
     const like = new this();
     like.userId = userId;
     like.commentId = commentId;
     like.status = status;
-    return like as CommentLikeDocument;
+    return like as CommentLike;
+  }
+
+  makeDeleted() {
+    if (this.deletedAt !== null) {
+      throw new Error('Entity already deleted');
+    }
+    this.deletedAt = new Date();
   }
 }
-
-// 1. Создаем схему
-export const CommentLikeSchema = SchemaFactory.createForClass(CommentLike);
-
-// 2. Загружаем методы класса в схему
-CommentLikeSchema.loadClass(CommentLike);
-
-// 3. Добавляем индексы
-CommentLikeSchema.index({ userId: 1, commentId: 1 }, { unique: true });
-
-// 4. Типы
-export type CommentLikeDocument = HydratedDocument<CommentLike>;
-export type CommentLikeModelType = Model<CommentLikeDocument> & typeof CommentLike;

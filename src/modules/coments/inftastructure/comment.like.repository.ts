@@ -1,90 +1,151 @@
-import { WithId } from 'mongodb';
-import { Types } from 'mongoose';
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import type { CommentModelType } from '../domain/comment.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DataSource, In, IsNull } from 'typeorm';
 import { Comment } from '../domain/comment.entity';
-import type { CommentLikeModelType } from '../domain/comment.like.entity';
 import { CommentLike } from '../domain/comment.like.entity';
 
 @Injectable()
 export class CommentLikeRepository {
-  constructor(@InjectModel(CommentLike.name)
-              private CommentLikeModel: CommentLikeModelType,
-              @InjectModel(Comment.name)
-              private CommentModel: CommentModelType) {
+  constructor(
+    @InjectRepository(CommentLike)
+    private readonly commentLikeRepository: Repository<CommentLike>,
+    @InjectRepository(Comment)
+    private readonly commentRepository: Repository<Comment>,
+    private readonly dataSource: DataSource, // Для транзакций
+  ) {
   }
 
-
-  async findLikeById(userId: string, commentId: string): Promise<WithId<CommentLike> | null> {
-    return this.CommentLikeModel.findOne({ userId, commentId });
+  // Поиск лайка пользователя для комментария
+  async findLikeById(userId: string, commentId: string): Promise<CommentLike | null> {
+    return this.commentLikeRepository.findOne({
+      where: { userId, commentId, deletedAt: IsNull() },
+    });
   }
 
-  // async findLikeByIdOrFail(userId: string, commentId: string): Promise<WithId<CommentLike>> {
-  //   const res = await this.findLikeById(userId, commentId);
-  //   if (!res) {
-  //     // throw new RepositoryNotFoundError("Like not exist");
-  //   }
-  //   return res;
-  // }
-
+  // Обновление статуса лайка с транзакцией
   async updateLikeStatus(
     commentId: string,
     userId: string,
-    likeStatus: string,
+    likeStatus: 'Like' | 'Dislike' | 'None',
   ): Promise<void> {
-    const currentLike = await this.findLikeById(userId, commentId);
+    const queryRunner = this.commentLikeRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (currentLike?.status === likeStatus) {
-      return;
-    }
-
-    // УБИРАЕМ транзакции - выполняем операции последовательно
     try {
-      // Удаляем предыдущий лайк если был
-      if (currentLike) {
-        await this.CommentLikeModel.deleteOne({ userId, commentId });
+      // Находим текущую реакцию (включая удаленные)
+      const current = await queryRunner.manager.findOne(CommentLike, {
+        where: { userId, commentId },
+        withDeleted: true,
+      });
 
-        // Уменьшаем предыдущий счетчик
-        const previousField = currentLike.status === 'Like'
-          ? { 'likesInfo.likesCount': -1 }
-          : { 'likesInfo.dislikesCount': -1 };
-
-        await this.CommentModel.updateOne(
-          { _id: new Types.ObjectId(commentId) },
-          { $inc: previousField },
-        );
+      // Если статус "None" - удаляем реакцию
+      if (likeStatus === 'None') {
+        if (current) {
+          await queryRunner.manager.softDelete(CommentLike, { userId, commentId });
+        }
+      } else {
+        // Если есть существующая запись - обновляем ее
+        if (current) {
+          if (current.deletedAt) {
+            await queryRunner.manager.restore(CommentLike, { userId, commentId });
+          }
+          current.status = likeStatus;
+          current.updatedAt = new Date();
+          current.deletedAt = null;
+          await queryRunner.manager.save(current);
+        } else {
+          // Создаем новую запись
+          const newLike = queryRunner.manager.create(CommentLike, {
+            userId,
+            commentId,
+            status: likeStatus,
+            createdAt: new Date(),
+            user: { id: userId },
+            comment: { id: commentId },
+          });
+          await queryRunner.manager.save(newLike);
+        }
       }
 
-      // Добавляем новый лайк если не "None"
-      if (likeStatus !== 'None') {
-        await this.CommentLikeModel.create({
-          userId,
-          commentId,
-          status: likeStatus as 'Like' | 'Dislike',
+      // Пересчитываем счетчики
+      const comment = await queryRunner.manager.findOne(Comment, {
+        where: { id: commentId },
+      });
+
+      if (comment) {
+        const activeLikes = await queryRunner.manager.find(CommentLike, {
+          where: {
+            commentId,
+            deletedAt: IsNull(),
+          },
         });
 
-        // Увеличиваем новый счетчик
-        const newField = likeStatus === 'Like'
-          ? { 'likesInfo.likesCount': 1 }
-          : { 'likesInfo.dislikesCount': 1 };
+        comment.likesInfo.likesCount = activeLikes.filter(l => l.status === 'Like').length;
+        comment.likesInfo.dislikesCount = activeLikes.filter(l => l.status === 'Dislike').length;
 
-        await this.CommentModel.updateOne(
-          { _id: new Types.ObjectId(commentId) },
-          { $inc: newField },
-        );
+        await queryRunner.manager.save(comment);
       }
-    } catch (error) {
-      // Логируем ошибку, но не блокируем всю операцию
-      console.error('Error updating like status:', error);
-      throw error;
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
   }
 
-  async getUserLikeStatus(commentId: string, userId?: string): Promise<'Like' | 'Dislike' | 'None'> {
+
+  // Получение статуса лайка пользователя
+  async getUserLikeStatus(
+    commentId: string,
+    userId?: string,
+  ): Promise<'Like' | 'Dislike' | 'None'> {
     if (!userId) return 'None';
 
-    const like = await this.CommentLikeModel.findOne({ userId, commentId });
+    const like = await this.commentLikeRepository.findOne({
+      where: {
+        userId ,
+        commentId,
+      },
+      select: ['status'],
+    });
+
     return like?.status || 'None';
+  }
+
+  // Получение статусов лайков для нескольких комментариев (оптимизация)
+  async getLikeStatusesForComments(
+    commentIds: string[],
+    userId: string,
+  ): Promise<{ [commentId: string]: 'Like' | 'Dislike' | 'None' }> {
+    if (!userId || commentIds.length === 0) {
+      return Object.fromEntries(commentIds.map(id => [id, 'None']));
+    }
+
+    // Используем дублирующее поле commentId для оптимизации
+    const likes = await this.commentLikeRepository.find({
+      where: {
+        userId, // Прямое сравнение, без JOIN
+        commentId: In(commentIds),
+        deletedAt: IsNull(), // исключаем удаленные
+      },
+      select: ['status', 'commentId'], // выбираем только нужные поля
+    });
+
+    const result: { [commentId: string]: 'Like' | 'Dislike' | 'None' } = {};
+
+    // Инициализируем все как 'None'
+    commentIds.forEach(id => result[id] = 'None');
+
+    // Заполняем найденные статусы
+    likes.forEach(like => {
+      if (like.commentId && like.status) {
+        result[like.commentId] = like.status;
+      }
+    });
+
+    return result;
   }
 }

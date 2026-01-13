@@ -1,4 +1,4 @@
-import { CommentDocument } from '../../domain/comment.entity';
+import { Comment } from '../../domain/comment.entity';
 
 
 export class CommentViewDto {
@@ -15,7 +15,7 @@ export class CommentViewDto {
     myStatus: 'None' | 'Like' | 'Dislike';
   };
 
-  static mapToView(comment: CommentDocument, myStatus: 'None' | 'Like' | 'Dislike' = 'None'): CommentViewDto {
+  static mapToView(comment: Comment, myStatus: 'None' | 'Like' | 'Dislike' = 'None'): CommentViewDto {
 
     // const myStatus = await commentLikeRepository.getUserLikeStatus(
     //   comment?._id.toString() || '',
@@ -24,10 +24,10 @@ export class CommentViewDto {
 
     const dto = new CommentViewDto();
 
-    dto.id = comment._id.toString(),
+    dto.id = comment.id,
       dto.content = comment.content,
       dto.commentatorInfo = {
-        userId: comment.commentatorInfo.userId.toString(),
+        userId: comment.commentatorInfo.userId,
         userLogin: comment.commentatorInfo.userLogin,
       },
       dto.createdAt = comment.createdAt,

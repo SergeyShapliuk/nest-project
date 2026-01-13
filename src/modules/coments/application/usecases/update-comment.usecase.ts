@@ -1,13 +1,12 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Types } from 'mongoose';
 import { UpdateCommentDto } from '../dto/update-comment.dto';
 import { ForbiddenException } from '@nestjs/common';
 import { CommentRepository } from '../../inftastructure/comment.repository';
 
 export class UpdateCommentCommand {
   constructor(
-    public id: Types.ObjectId,
-    public userId: Types.ObjectId | undefined,
+    public id: string,
+    public userId: string | undefined,
     public dto: UpdateCommentDto,
   ) {
   }

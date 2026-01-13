@@ -102,43 +102,46 @@ export class PostsController {
   //   const objectId = new Types.ObjectId(id);
   //   return this.commandBus.execute<DeletePostCommand, void>(new DeletePostCommand(objectId));
   // }
-  //
-  // @ApiBearerAuth()
-  // @UseGuards(JwtOptionalAuthGuard)
-  // @ApiParam({ name: 'id', type: 'string' })
-  // @Get('/:postId/comments')
-  // async getCommentByPostId(@Query() query: GetCommentQueryParams,
-  //                          @Param('postId') postId: string,
-  //                          @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<PaginatedViewDto<CommentViewDto[]>> {
-  //   // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
-  //   console.log('getPostId', postId);
-  //   const objectId = new Types.ObjectId(postId);
-  //   return this.queryBus.execute<GetCommentsByPostIdQuery, PaginatedViewDto<CommentViewDto[]>>(new GetCommentsByPostIdQuery(query, objectId, user?.id));
-  //
-  // }
-  //
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard)
-  // @Post('/:postId/comments')
-  // async createCommentByPost(@Param('postId') postId: string,
-  //                           @Body() body: CommentCreateInputDto,
-  //                           @ExtractUserIfExistsFromRequest() user: UserContextDto | null): Promise<CommentViewDto> {
-  //   const objectId = new Types.ObjectId(postId);
-  //   return this.commandBus.execute<CreateCommentByPostIdCommand,
-  //     CommentViewDto>(new CreateCommentByPostIdCommand(body, objectId, user?.id));
-  // }
-  //
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard)
-  // @Put('/:postId/like-status')
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async updateLikeStatusPost(
-  //   @Param('postId') postId: string,
-  //   @Body() body: UpdateLikeStatusDto,
-  //   @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
-  // ): Promise<void> {
-  //   const objectId = new Types.ObjectId(postId);
-  //   return this.commandBus.execute<UpdatePostLikeStatusCommand, void>(new UpdatePostLikeStatusCommand(body, objectId, user?.id));
-  // }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtOptionalAuthGuard)
+  @ApiParam({ name: 'id', type: 'string' })
+  @Get('/:postId/comments')
+  async getCommentByPostId(@Query() query: GetCommentQueryParams,
+                           @Param('postId') postId: string,
+                           @ExtractUserIfExistsFromRequest() user: { id: string } | null): Promise<PaginatedViewDto<CommentViewDto[]>> {
+    // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
+    console.log('getPostId', postId);
+
+    return this.queryBus.execute<GetCommentsByPostIdQuery, PaginatedViewDto<CommentViewDto[]>>(new GetCommentsByPostIdQuery(query, postId, user?.id));
+
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
+  @Post('/:postId/comments')
+  async createCommentByPost(@Param('postId') postId: string,
+                            @Body() body: CommentCreateInputDto,
+                            @ExtractUserIfExistsFromRequest() user: { id: string } | null): Promise<CommentViewDto> {
+    console.log('postId', postId);
+    console.log('user', user);
+    return this.commandBus.execute<CreateCommentByPostIdCommand,
+      CommentViewDto>(new CreateCommentByPostIdCommand(body, postId, user?.id));
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Put('/:postId/like-status')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateLikeStatusPost(
+    @Param('postId') postId: string,
+    @Body() body: UpdateLikeStatusDto,
+    @ExtractUserIfExistsFromRequest() user: { id: string } | null,
+  ): Promise<void> {
+
+    return this.commandBus.execute<UpdatePostLikeStatusCommand, void>(new UpdatePostLikeStatusCommand(body, postId, user?.id));
+  }
 
 }

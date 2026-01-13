@@ -1,23 +1,30 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 // Подсхема для информации о комментаторе
-@Schema({ _id: false })
+@Entity()
 export class CommentatorInfo {
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   userId: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   userLogin: string;
 }
 
 // Подсхема для информации о лайках
-@Schema({ _id: false })
+@Entity()
 export class LikesInfo {
-  @Prop({ type: Number, default: 0 })
+  @Column({ type: 'int', default: 0 })
   likesCount: number;
 
-  @Prop({ type: Number, default: 0 })
+  @Column({ type: 'int', default: 0 })
   dislikesCount: number;
 
   // Можно добавить массивы пользователей, которые лайкнули/дизлайкнули
@@ -28,38 +35,31 @@ export class LikesInfo {
   // dislikes: string[]; // userIds
 }
 
-@Schema({ timestamps: true }) // createdAt и updatedAt добавятся автоматически
-export class Comment {
-  @Prop({ type: String, required: true })
+@Entity('comments') // createdAt и updatedAt добавятся автоматически
+export class Comment extends BaseEntity {
+  @PrimaryGeneratedColumn('uuid') // Или 'increment' для числового ID
+  id: string;
+
+  @Column({ type: 'text', nullable: false })
   content: string;
 
-  @Prop({ type: CommentatorInfo, required: true })
+  @Column(() => CommentatorInfo)
   commentatorInfo: CommentatorInfo;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'uuid', nullable: false })
   postId: string;
 
-  @Prop({ type: LikesInfo, default: () => ({
-      likesCount: 0,
-      dislikesCount: 0,
-      // likes: [],
-      // dislikes: []
-    })})
+  @Column(() => LikesInfo)
   likesInfo: LikesInfo;
 
-  // Эти поля добавятся автоматически благодаря timestamps: true
+  @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
   updatedAt: Date;
 
-  // Для мягкого удаления
-  @Prop({ type: Date, default: null })
+  @DeleteDateColumn()
   deletedAt: Date | null;
-
-  // Геттер для id (опционально)
-  get id() {
-    // @ts-ignore
-    return this._id.toString();
-  }
 
   /**
    * Фабричный метод для создания комментария
@@ -67,8 +67,8 @@ export class Comment {
   static createInstance(
     content: string,
     commentatorInfo: CommentatorInfo,
-    postId: string
-  ): CommentDocument {
+    postId: string,
+  ): Comment {
     const comment = new this();
 
     comment.content = content;
@@ -81,7 +81,7 @@ export class Comment {
     //   // dislikes: []
     // };
 
-    return comment as CommentDocument;
+    return comment;
   }
 
   /**
@@ -116,17 +116,3 @@ export class Comment {
     this.deletedAt = new Date();
   }
 }
-
-// Создаем схему Mongoose
-export const CommentSchema = SchemaFactory.createForClass(Comment);
-CommentSchema.loadClass(Comment);
-
-// Опционально: добавляем индексы для производительности
-// CommentSchema.index({ postId: 1 });
-// CommentSchema.index({ 'commentatorInfo.userId': 1 });
-// CommentSchema.index({ createdAt: -1 });
-// CommentSchema.index({ deletedAt: 1 });
-
-// Тип документа Mongoose
-export type CommentDocument = HydratedDocument<Comment>;
-export type CommentModelType = Model<CommentDocument> & typeof Comment;

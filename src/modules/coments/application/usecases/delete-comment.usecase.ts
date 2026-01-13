@@ -4,8 +4,8 @@ import { CommentRepository } from '../../inftastructure/comment.repository';
 import { ForbiddenException } from '@nestjs/common';
 
 export class DeleteCommentCommand {
-  constructor(public id: Types.ObjectId,
-              public userId: Types.ObjectId) {
+  constructor(public id: string,
+              public userId: string) {
   }
 }
 

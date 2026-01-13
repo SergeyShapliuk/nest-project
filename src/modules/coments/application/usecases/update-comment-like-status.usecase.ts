@@ -1,13 +1,12 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Types } from 'mongoose';
 import { CommentLikeRepository } from '../../inftastructure/comment.like.repository';
 import { CommentRepository } from '../../inftastructure/comment.repository';
 
 export class UpdateCommentLikeStatusCommand {
   constructor(
-    public commentId: Types.ObjectId,
-    public userId: Types.ObjectId | undefined,
-    public dto: { likeStatus: string },
+    public commentId:string,
+    public userId: string | undefined,
+    public dto: { likeStatus: 'Like' | 'Dislike' | 'None' },
   ) {
   }
 }

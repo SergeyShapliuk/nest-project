@@ -1,6 +1,5 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
-import { Types } from 'mongoose';
 import { CommentViewDto } from '../../../api/view-dto/comments.view-dto';
 import { CommentsQwRepository } from '../../../inftastructure/query/comments.query.repository';
 import { CommentRepository } from '../../../inftastructure/comment.repository';
@@ -9,8 +8,8 @@ import { DomainExceptionCode } from '../../../../../core/exceptions/domain-excep
 
 export class GetCommentByIdQuery {
   constructor(
-    public id: Types.ObjectId,
-    public userId?: Types.ObjectId | undefined,
+    public id: string,
+    public userId?: string | undefined,
   ) {
   }
 }

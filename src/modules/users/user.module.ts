@@ -40,6 +40,7 @@ import { BlackList } from './domain/blackListToken.entity';
 import { BlackListRepository } from './infrastructure/black-list.repository';
 import { LogoutUserUseCase } from './application/usecases/logout-user.usecase';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserConfig } from './config/user.config';
 
 const commandHandlers = [
   DeleteUserUseCase,
@@ -63,33 +64,56 @@ const queryHandlers = [GetUserByIdQueryHandler, GetSessionsQueryHandler];
       Session,
       BlackList,
     ]),
-    NotificationsModule],
+    NotificationsModule,
+  ],
   controllers: [UsersController, AuthController, SessionController],
-  providers: [...commandHandlers, ...queryHandlers, {
-    provide: ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
-    useFactory: (): JwtService => {
-      return new JwtService({
-        secret: 'access-token-secret', //TODO: move to env. will be in the following lessons
-        signOptions: { expiresIn: '10s' },
-      });
-    },
-    inject: [
-      /*TODO: inject configService. will be in the following lessons*/
-    ],
-  },
+  providers: [...commandHandlers, ...queryHandlers,
+    //   { provide: ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
+    //   useFactory: (): JwtService => {
+    //     return new JwtService({
+    //       secret: 'access-token-secret', //TODO: move to env. will be in the following lessons
+    //       signOptions: { expiresIn: '10s' },
+    //     });
+    //   },
+    //   inject: [
+    //     /*TODO: inject configService. will be in the following lessons*/
+    //   ],
+    // },
+    //   {
+    //     provide: REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
+    //     useFactory: (): JwtService => {
+    //       return new JwtService({
+    //         secret: 'refresh-token-secret', //TODO: move to env. will be in the following lessons
+    //         signOptions: { expiresIn: '20s' },
+    //       });
+    //     },
+    //     inject: [
+    //       /*TODO: inject configService. will be in the following lessons*/
+    //     ],
+    //   },
+    //пример инстанцирования через токен
+    //если надо внедрить несколько раз один и тот же класс
     {
-      provide: REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
-      useFactory: (): JwtService => {
+      provide: ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
+      useFactory: (UserConfig: UserConfig): JwtService => {
         return new JwtService({
-          secret: 'refresh-token-secret', //TODO: move to env. will be in the following lessons
-          signOptions: { expiresIn: '20s' },
+          secret: UserConfig.accessTokenSecret,
+          signOptions: { expiresIn: UserConfig.accessTokenExpireIn as any },
         });
       },
-      inject: [
-        /*TODO: inject configService. will be in the following lessons*/
-      ],
+      inject: [UserConfig],
     },
-    UserService, UsersRepository, UsersQwRepository, AuthQueryRepository, BlackListRepository, AuthService, LocalStrategy, CryptoService, JwtStrategy, UsersExternalQueryRepository, UsersExternalService, RefreshTokenBlackListService, UsersFactory, SessionService, SessionRepository, SessionsQwRepository,
+    {
+      provide: REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
+      useFactory: (UserConfig: UserConfig): JwtService => {
+        return new JwtService({
+          secret: UserConfig.refreshTokenSecret,
+          signOptions: { expiresIn: UserConfig.refreshTokenExpireIn as any },
+        });
+      },
+      inject: [UserConfig],
+    },
+    UserService, UsersRepository, UsersQwRepository, AuthQueryRepository, BlackListRepository, AuthService, LocalStrategy, CryptoService, JwtStrategy, UsersExternalQueryRepository, UsersExternalService, RefreshTokenBlackListService, UsersFactory, SessionService, SessionRepository, SessionsQwRepository, UserConfig,
   ],
   exports: [JwtStrategy, UsersExternalQueryRepository, UsersExternalService, UsersRepository],
 })

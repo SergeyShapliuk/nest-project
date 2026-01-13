@@ -1,22 +1,28 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { appSetup } from './setup/app.setup';
 import localtunnel from 'localtunnel';
 import ngrok from 'ngrok';
 import cookieParser from 'cookie-parser';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { initAppModule } from './init-app-module';
+import { CoreConfig } from './core/config/core.config';
+import { SETTINGS } from './core/settings/settings';
 
 async function bootstrap() {
+  const DynamicAppModule = await initAppModule();
+  const app = await NestFactory.create<NestExpressApplication>(DynamicAppModule);
+  const coreConfig = app.get<CoreConfig>(CoreConfig);
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  const port = parseInt(process.env.PORT || '5001', 10);
+  // const port = parseInt(coreConfig.port, 10);
+  console.log('maints',coreConfig.port)
+  const port = coreConfig.port;
 
   app.set('trust proxy', true);
 
   app.use(cookieParser());
   app.enableCors();
 
-  appSetup(app); //глобальные настройки приложения
+  appSetup(app, coreConfig.isSwaggerEnabled); //глобальные настройки приложения
 
   const server = await app.listen(port);
   server.setTimeout(60000); // 60s
