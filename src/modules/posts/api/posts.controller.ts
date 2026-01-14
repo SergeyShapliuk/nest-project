@@ -55,8 +55,8 @@ export class PostsController {
     return this.queryBus.execute<GetPostsQuery, PaginatedViewDto<PostViewDto[]>>(new GetPostsQuery(query, user?.id || undefined));
   }
 
-  // @ApiBearerAuth()
-  // @UseGuards(JwtOptionalAuthGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtOptionalAuthGuard)
   @ApiParam({ name: 'id', type: 'string' })
   @Get(':id')
   async getPostId(@Param('id') id: string,
