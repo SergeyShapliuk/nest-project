@@ -66,8 +66,8 @@ export class BlogsController {
     return this.queryBus.execute(new GetBlogsQuery(query));
   }
 
-  // @ApiBearerAuth()
-  // @UseGuards(JwtOptionalAuthGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtOptionalAuthGuard)
   @ApiParam({ name: 'id', type: 'string' })
   @Get(':id')
   async getBlogId(@Param('id') id: string): Promise<BlogViewDto> {
