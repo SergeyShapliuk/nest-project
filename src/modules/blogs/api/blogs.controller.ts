@@ -101,8 +101,8 @@ export class BlogsController {
   //
   // }
 
-  // @ApiBearerAuth()
-  // @UseGuards(JwtOptionalAuthGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtOptionalAuthGuard)
   @ApiParam({ name: 'id', type: 'string' })
   @Get(':blogId/posts')
   async getPostsByBlogId(@Query() query: GetPostsQueryParams, @Param('blogId') blogId: string,
