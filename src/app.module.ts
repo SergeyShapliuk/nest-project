@@ -34,17 +34,17 @@ import { CommentModule } from './modules/coments/comment.module';
     isGlobal: true,
     load: [configuration],
   }),
-    MongooseModule.forRootAsync({
-      useFactory: (coreConfig: CoreConfig) => {
-        const uri = coreConfig.mongoURL;
-        console.log('DB_URI mongo', uri);
-
-        return {
-          uri: uri,
-        };
-      },
-      inject: [CoreConfig],
-    }),
+    // MongooseModule.forRootAsync({
+    //   useFactory: (coreConfig: CoreConfig) => {
+    //     const uri = coreConfig.mongoURL;
+    //     console.log('DB_URI mongo', uri);
+    //
+    //     return {
+    //       uri: uri,
+    //     };
+    //   },
+    //   inject: [CoreConfig],
+    // }),
     // MongooseModule.forRootAsync(mongooseOptions),
     // MongooseModule.forRoot(SETTINGS.MONGO_URL!),
     TypeOrmModule.forRootAsync({
