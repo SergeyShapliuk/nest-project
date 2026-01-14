@@ -46,8 +46,8 @@ export class PostsController {
     private readonly queryBus: QueryBus) {
   }
 
-  // @ApiBearerAuth()
-  // @UseGuards(JwtOptionalAuthGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtOptionalAuthGuard)
   @Get()
   async getAll(@Query() query: GetPostsQueryParams,
                @ExtractUserIfExistsFromRequest() user: { id: string } | null): Promise<PaginatedViewDto<PostViewDto[]>> {
