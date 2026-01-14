@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
-import { UsersController } from '../src/modules/users/api/users.controller';
-import { UsersQwRepository } from '../src/modules/users/infrastructure/query/users.query.repository';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { UsersController } from '../../src/modules/users/api/users.controller';
+import { UsersQwRepository } from '../../src/modules/users/infrastructure/query/users.query.repository';
 
 describe('UsersController (unit)', () => {
   let controller: UsersController;

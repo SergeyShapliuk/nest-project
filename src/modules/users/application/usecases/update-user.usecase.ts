@@ -10,24 +10,24 @@ export class UpdateUserCommand {
   constructor(
     public id: Types.ObjectId,
     public dto: UpdateUserDto,
-  ) {
-  }
+  ) {}
 }
 
 @CommandHandler(UpdateUserCommand)
-export class CreateUserUseCase
+export class UpdateUserUseCase
   implements ICommandHandler<UpdateUserCommand, void> {
   constructor(
     @InjectModel(User.name)
     private UserModel: UserModelType,
     private usersRepository: UsersRepository,
-  ) {
-  }
+  ) {}
 
   async execute({ id, dto }: UpdateUserCommand): Promise<void> {
     const user = await this.usersRepository.findOrNotFoundFail(id);
 
-    // user.update(dto);
+    if (dto.email && dto.email !== user.email) {
+      user.email = dto.email;
+    }
 
     await this.usersRepository.save(user);
   }

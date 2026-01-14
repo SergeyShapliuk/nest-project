@@ -40,12 +40,14 @@ import { RefreshTokenBlackListService } from './application/services/refreshToke
 import { BlackList, BlackListSchema } from './domain/blackListToken.entity';
 import { BlackListRepository } from './infrastructure/black-list.repository';
 import { LogoutUserUseCase } from './application/usecases/logout-user.usecase';
+import { UpdateUserUseCase } from './application/usecases/update-user.usecase';
 
 const commandHandlers = [
   DeleteUserUseCase,
   RegisterUserUseCase,
   LoginUserUseCase,
   CreateUserUseCase,
+  UpdateUserUseCase,
   DeleteSessionUseCase,
   DeleteSessionsUseCase,
   RefreshTokenUseCase,

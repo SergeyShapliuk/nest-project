@@ -71,7 +71,7 @@ export class UsersController {
   @ApiParam({ name: 'id', type: 'string' })
   @Put(':id')
   async updateUser(
-    @Param('id') id: Types.ObjectId,
+    @Param('id', ObjectIdValidationPipe) id: Types.ObjectId,
     @Body() body: UpdateUserInputDto,
   ): Promise<UserViewDto> {
     await this.commandBus.execute<UpdateUserCommand, void>(
