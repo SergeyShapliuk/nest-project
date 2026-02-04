@@ -112,9 +112,9 @@ export class AuthService {
     user.setCode(newConfirmationCode, newExpirationDate);
     await this.usersRepository.save(user);
 
-    // await this.emailService
-    //   .sendConfirmationEmail(user.email, newConfirmationCode)
-    //   .catch(console.error);
+    await this.emailService
+      .sendConfirmationEmail(user.email, newConfirmationCode)
+      .catch(console.error);
   }
 
   async passwordRecovery(email: string) {
