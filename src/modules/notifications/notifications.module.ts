@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { EmailService } from './email.service';
@@ -10,16 +10,26 @@ import { EmailService } from './email.service';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const emailConfig = configService.get('sendMail');
-        console.log('📧 Email config from ConfigService:', {
-          authMail: emailConfig?.user,
-          authPass: !!emailConfig?.authPass,
-        });
+        // ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ
+        const logger = new Logger('MailerConfig');
+        logger.debug('📧 Полная конфигурация email:');
+        logger.debug(`Host: ${emailConfig?.host}`);
+        logger.debug(`Port: ${emailConfig?.port}`);
+        logger.debug(`User: ${emailConfig?.user}`);
+        logger.debug(`Pass: ${emailConfig?.pass ? '*****' : 'NOT SET'}`);
+        logger.debug(`Name: ${emailConfig?.name}`);
+
+        // Проверяем обязательные поля
+        if (!emailConfig?.host || !emailConfig?.user || !emailConfig?.pass) {
+          logger.error('❌ НЕДОСТАЮТ ОБЯЗАТЕЛЬНЫЕ ПОЛЯ КОНФИГУРАЦИИ!');
+          throw new Error('Email configuration is incomplete');
+        }
         return {
           transport: {
             // service: 'gmail',
             host: emailConfig?.host,
             port: emailConfig?.port,
-            // secure: false,
+            secure: true,
             auth: {
               user: emailConfig?.user,
               pass: emailConfig?.pass,
@@ -27,9 +37,11 @@ import { EmailService } from './email.service';
             tls: {
               rejectUnauthorized: false,
             },
+            debug: true,
+            logger: true,
           },
           defaults: {
-            from: `${emailConfig?.name} <${emailConfig?.user}>`,
+            from: `${emailConfig?.name} <sergeshapluk@gmail.com>`,
           },
         };
       },

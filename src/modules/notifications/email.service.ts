@@ -70,7 +70,18 @@ export class EmailService {
                <p>To finish registration please follow the link below:<br>
                   <a href='https://somesite.com/confirm-email?code=${code}'>complete registration</a>
               </p>`,
+        // dkim: {
+        //   domainName: 'deveber.site',
+        //   keySelector: 'default', // Должен соответствовать _domainkey.default
+        //   privateKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtJvWtN1hRaHFZwZFXmzEhlGEuGA8Pfi6qNHExFedkSqHQTsYYaatDN0AyN2dMzAUmgbO+blmbWtOqTRyeSnp65WSiGtykv8OP9STj5E3vRXITeRPQafVL/YAbyrOGxfzisCYNZ/LWx3CbU07QEtP0kz890ZVynJQYjscbfMRaz/d0KGKjIgF5yKajixWnSKVY5dAb886jOnNWaJB+C84DgDGLGnfs8O+4EgtBC22fLcgnqwLh8sDtYukCbgBToEjavLSz6B1BTwh0un7lhB7Ac5KxYxM56A1i5ARrQVC1gAM8dDf7xBtx0c0XJzvy4DbDOTNIieF1mj8BDku82VmgQIDAQAB',
+        // },
+        // headers: {
+        //   'List-Unsubscribe': `<mailto:unsubscribe@deveber.site>`,
+        //   'X-Mailer': 'NestJS Mailer',
+        //   'X-Priority': '3',
+        // },
       });
+      console.log('sendConfirmationEmail success',);
     } catch (e) {
       console.log('smtp erro', e);
       throw Error('smtp erro');
@@ -87,6 +98,7 @@ export class EmailService {
             <a href='https://somesite.com/password-recovery?recoveryCode=${code}'>recovery password</a>
         </p>`,
     });
+    console.log('sendConfirmationCode success',);
   }
 
   // async sendConfirmationEmail(email: string, code: string) {
