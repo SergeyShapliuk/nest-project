@@ -23,7 +23,9 @@
     "migration:generate": "typeorm-ts-node-commonjs migration:generate -d typeorm.config.cjs",
     "migration:create": "typeorm-ts-node-commonjs migration:create",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d typeorm.config.cjs",
-    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d typeorm.config.cjs"
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d typeorm.config.cjs",
+    "migration:user:generate": "typeorm-ts-node-commonjs migration:generate -d ./typeorm-user-only.cjs",
+    "migration:user:run": "typeorm-ts-node-commonjs migration:run -d ./typeorm-user-only.cjs"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",

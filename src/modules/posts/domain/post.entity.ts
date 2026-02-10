@@ -28,14 +28,18 @@ export const emailConstraints = {
 // ==================== ENTITY (для TypeORM) ====================
 
 // Вложенный объект (Embedded/Value Object)
+@Entity()
 export class ExtendedLikesInfo {
-  likesCount: number = 0;
-  dislikesCount: number = 0;
+  @Column({ type: 'int', default: 0 })
+  likesCount: number;
 
-  constructor(likesCount = 0, dislikesCount = 0) {
-    this.likesCount = likesCount;
-    this.dislikesCount = dislikesCount;
-  }
+  @Column({ type: 'int', default: 0 })
+  dislikesCount: number;
+
+  // constructor(likesCount = 0, dislikesCount = 0) {
+  //   this.likesCount = likesCount;
+  //   this.dislikesCount = dislikesCount;
+  // }
 }
 
 // Основная сущность Post
@@ -65,11 +69,7 @@ export class Post extends BaseEntity {
   // extendedLikesInfo: ExtendedLikesInfo;
 
   // Вариант 2: Embedded Entity (более типобезопасно)
-  @Column({
-    type: 'json', // или 'jsonb' для PostgreSQL
-    default: { likesCount: 0, dislikesCount: 0 },
-    nullable: false
-  })
+  @Column(() => ExtendedLikesInfo)
   extendedLikesInfo: ExtendedLikesInfo;
 
   @CreateDateColumn()

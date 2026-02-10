@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 
 // Подсхема для информации о комментаторе
-
+@Entity()
 export class CommentatorInfo {
   @Column({ type: 'varchar', length: 255 })
   userId: string;
@@ -19,7 +19,7 @@ export class CommentatorInfo {
 }
 
 // Подсхема для информации о лайках
-
+@Entity()
 export class LikesInfo {
   @Column({ type: 'int', default: 0 })
   likesCount: number;
@@ -43,19 +43,13 @@ export class Comment extends BaseEntity {
   @Column({ type: 'text', nullable: false })
   content: string;
 
-  @Column({
-    type: 'json',
-    nullable: false
-  })
+  @Column(() => CommentatorInfo)
   commentatorInfo: CommentatorInfo;
 
   @Column({ type: 'uuid', nullable: false })
   postId: string;
 
-  @Column({
-    type: 'json',
-    default: { likesCount: 0, dislikesCount: 0 }
-  })
+  @Column(() => LikesInfo)
   likesInfo: LikesInfo;
 
   @CreateDateColumn()
