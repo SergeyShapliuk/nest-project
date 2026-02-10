@@ -60,7 +60,8 @@ import databaseConf, { DatabaseConfig } from './core/config/db.config';
           type: 'postgres',
           url: url,
           autoLoadEntities: true,
-          synchronize: process.env.NODE_ENV === 'development',
+          // synchronize: process.env.NODE_ENV === 'development',
+          synchronize: true,
           // logging: true,
         };
       },
