@@ -29,7 +29,7 @@ import { EmailService } from './email.service';
             // service: 'gmail',
             host: emailConfig?.host,
             port: emailConfig?.port,
-            secure: true,
+            secure: false,
             auth: {
               user: emailConfig?.user,
               pass: emailConfig?.pass,
@@ -41,7 +41,7 @@ import { EmailService } from './email.service';
             logger: true,
           },
           defaults: {
-            from: `${emailConfig?.name} <sergeshapluk@gmail.com>`,
+            from: `"${emailConfig?.name}" <${emailConfig?.user}>`,
           },
         };
       },

@@ -12,7 +12,8 @@ export class UsersQwRepository {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-  ) {}
+  ) {
+  }
 
   async getByIdOrNotFoundFail(id: string): Promise<UserViewDto> {
     const user = await this.userRepo.findOne({
@@ -41,11 +42,12 @@ export class UsersQwRepository {
       searchEmailTerm,
     } = queryDto;
 
-    console.log({ searchLoginTerm, searchEmailTerm });
+    console.log('=== QUERY PARAMS ===');
+    console.log({ sortBy, sortDirection, searchLoginTerm, searchEmailTerm });
 
     const qb = this.userRepo
-      .createQueryBuilder('u')
-      .where('u.deletedAt IS NULL');
+      .createQueryBuilder('u');
+    // .where('u.deletedAt IS NULL');
 
     /* ========= SEARCH ========= */
 
@@ -63,23 +65,41 @@ export class UsersQwRepository {
               searchEmail: `%${searchEmailTerm.trim()}%`,
             });
           }
-        })
+        }),
       );
     }
 
     /* ========= SORT ========= */
+    const direction = sortDirection.toUpperCase() as 'ASC' | 'DESC';
 
-    qb.orderBy(
-      `u.${sortBy}`,
-      sortDirection.toUpperCase() as 'ASC' | 'DESC',
-    );
+    if (sortBy === 'login' || sortBy === 'email') {
+      qb.orderBy(`u.${sortBy} COLLATE "C"`, direction);
+    } else {
+      qb.orderBy(`u.${sortBy}`, direction);
+    }
 
     /* ========= PAGINATION ========= */
 
     qb.skip(queryDto.calculateSkip()).take(pageSize);
 
     const [users, totalCount] = await qb.getManyAndCount();
+    console.log('=== FINAL SQL ===');
+    console.log(qb.getQueryAndParameters());
+// Или если не работает:
+    console.log('Query:', qb.getSql());
+    console.log('Params:', qb.getParameters());
 
+// Также добавь после getManyAndCount():
+    console.log('=== RAW RESULT ===');
+    console.log('Users count:', users.length);
+    users.forEach((u, i) => {
+      console.log(`${i + 1}. ${u.login} (${u.id.substring(0, 8)}...)`);
+    });
+    // После получения users
+    console.log('=== USER DETAILS ===');
+    users.forEach((u, i) => {
+      console.log(`${i + 1}. ${u.login} | ${u.email} | created: ${u.createdAt}`);
+    });
     const items = users.map(UserViewDto.mapToView);
 
     return PaginatedViewDto.mapToView({

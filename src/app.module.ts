@@ -69,14 +69,14 @@ import { CommentModule } from './modules/coments/comment.module';
     //   autoLoadEntities: true,
     //   synchronize: true,
     // }),
-    // ThrottlerModule.forRoot({
-    //   throttlers: [
-    //     {
-    //       ttl: 10000, // 10 секунд (в миллисекундах)
-    //       limit: 5,    // 5 запросов
-    //     },
-    //   ],
-    // }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 10000, // 10 секунд (в миллисекундах)
+          limit: 5,    // 5 запросов
+        },
+      ],
+    }),
     UserModule, PostModule, BlogModule, TestingModule, CoreModule, NotificationsModule, CommentModule, configModule],
   controllers: [AppController],
   providers: [AppService,
@@ -92,10 +92,10 @@ import { CommentModule } from './modules/coments/comment.module';
       provide: APP_FILTER,
       useClass: DomainHttpExceptionsFilter,
     },
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: ThrottlerGuard, // Глобальный guard
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard, // Глобальный guard
+    },
   ],
 })
 

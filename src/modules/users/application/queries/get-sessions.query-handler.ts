@@ -1,6 +1,5 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
-import { Types } from 'mongoose';
 import { SessionsViewDto } from '../../api/view-dto/sessions.view-dto';
 import { SessionsQwRepository } from '../../infrastructure/query/sessions.query.repository';
 
