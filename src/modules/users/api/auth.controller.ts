@@ -51,7 +51,7 @@ export class AuthController {
   }
 
   @Post('registration')
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  // @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(HttpStatus.NO_CONTENT)
   registration(@Body() body: CreateUserInputDto): Promise<void> {
     // return this.authService.registerUser(body);
@@ -59,7 +59,7 @@ export class AuthController {
   }
 
   @Post('login')
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  // @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(HttpStatus.OK)
   // @UseGuards(LocalAuthGuard)
   // @ApiBasicAuth('basicAuth')
@@ -105,14 +105,14 @@ export class AuthController {
   }
 
   @Post('registration-confirmation')
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  // @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(HttpStatus.NO_CONTENT)
   confirmCode(@Body() body: CodeInputDto): Promise<void> {
     return this.authService.confirmCode(body.code);
   }
 
   @Post('registration-email-resending')
-  @Throttle({ default: { limit: 5, ttl: 10000 } })
+  // @Throttle({ default: { limit: 5, ttl: 10000 } })
   @HttpCode(HttpStatus.NO_CONTENT)
   resendCode(@Body() body: UpdateUserInputDto): Promise<void> {
     return this.authService.resendCode(body.email);

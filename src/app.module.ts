@@ -14,7 +14,7 @@ import { AllHttpExceptionsFilter } from './core/exceptions/filters/all-exception
 import { DomainHttpExceptionsFilter } from './core/exceptions/filters/domain-exceptions.filter';
 import { TestValidationFilter } from './core/exceptions/filters/test-validation.filter';
 import configuration from './core/config/configuration';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+// import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { configModule } from './config-dynamic-module';
@@ -69,14 +69,14 @@ import { CommentModule } from './modules/coments/comment.module';
     //   autoLoadEntities: true,
     //   synchronize: true,
     // }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 10000, // 10 секунд (в миллисекундах)
-          limit: 5,    // 5 запросов
-        },
-      ],
-    }),
+    // ThrottlerModule.forRoot({
+    //   throttlers: [
+    //     {
+    //       ttl: 10000, // 10 секунд (в миллисекундах)
+    //       limit: 5,    // 5 запросов
+    //     },
+    //   ],
+    // }),
     UserModule, PostModule, BlogModule, TestingModule, CoreModule, NotificationsModule, CommentModule, configModule],
   controllers: [AppController],
   providers: [AppService,
@@ -92,10 +92,10 @@ import { CommentModule } from './modules/coments/comment.module';
       provide: APP_FILTER,
       useClass: DomainHttpExceptionsFilter,
     },
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard, // Глобальный guard
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: ThrottlerGuard, // Глобальный guard
+    // },
   ],
 })
 
