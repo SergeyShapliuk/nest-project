@@ -10,7 +10,8 @@ export class UsersRepository {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-  ) {}
+  ) {
+  }
 
   async findById(id: string): Promise<User | null> {
     return this.userRepo.findOne({
@@ -22,7 +23,8 @@ export class UsersRepository {
   }
 
   async save(user: User): Promise<void> {
-    await this.userRepo.save(user);
+    const res = await this.userRepo.save(user);
+    console.log('save migration', res);
   }
 
   async findOrNotFoundFail(id: string): Promise<User> {

@@ -1,11 +1,9 @@
 import {
   Entity,
   Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn, DeleteDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
-
+import { BaseEntity } from '../../../core/entities/base.entity';
 
 
 export const loginConstraints = {
@@ -21,7 +19,6 @@ export const passwordConstraints = {
 export const emailConstraints = {
   match: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
 };
-
 
 
 /* ==================== EMAIL CONFIRMATION ==================== */
@@ -40,9 +37,7 @@ export class EmailConfirmation {
 /* ==================== USER ENTITY ==================== */
 
 @Entity('users')
-export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+export class User extends BaseEntity {
 
   @Column({ type: 'varchar', length: 10 })
   login: string;
@@ -57,11 +52,8 @@ export class User {
   @Column(() => EmailConfirmation)
   emailConfirmation: EmailConfirmation;
 
-  @CreateDateColumn({ type: 'timestamp with time zone' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ type: 'timestamp with time zone' })
-  updatedAt: Date;
+  @Column({ default: '' })
+  public description: string;
 
   @DeleteDateColumn()
   deletedAt: Date | null;

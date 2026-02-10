@@ -7,7 +7,7 @@ import { UserModule } from './modules/users/user.module';
 import { CoreModule } from './core/core.module';
 import { PostModule } from './modules/posts/post.module';
 import { BlogModule } from './modules/blogs/blog.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TestingModule } from './modules/testing/testing.module';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AllHttpExceptionsFilter } from './core/exceptions/filters/all-exceptions.filter';
@@ -20,6 +20,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { configModule } from './config-dynamic-module';
 import { CoreConfig } from './core/config/core.config';
 import { CommentModule } from './modules/coments/comment.module';
+import databaseConf, { DatabaseConfig } from './core/config/db.config';
 
 // const mongooseOptions: MongooseModuleAsyncOptions = {
 //   imports: [configModule],
@@ -52,12 +53,14 @@ import { CommentModule } from './modules/coments/comment.module';
         const url = coreConfig.postgresURL;
         console.log('DB_URI postgres', url);
         console.log('DB_URI port', coreConfig.port);
-
+        // return dbConfig.get('database', {
+        //   infer: true,
+        // });
         return {
           type: 'postgres',
           url: url,
           autoLoadEntities: true,
-          synchronize: true,
+          synchronize: process.env.NODE_ENV === 'development',
           // logging: true,
         };
       },
