@@ -52,9 +52,6 @@ export class User extends BaseEntity {
   @Column(() => EmailConfirmation)
   emailConfirmation: EmailConfirmation;
 
-  @Column({ default: '' })
-  public description: string;
-
   @DeleteDateColumn()
   deletedAt: Date | null;
 
