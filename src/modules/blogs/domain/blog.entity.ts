@@ -4,10 +4,11 @@ import {
   BaseEntity,
   Column,
   CreateDateColumn,
-  DeleteDateColumn, Entity,
+  DeleteDateColumn, Entity, JoinColumn, OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Post } from '../../posts/domain/post.entity';
 
 
 export const loginConstraints = {
@@ -66,6 +67,9 @@ export class Blog extends BaseEntity {
 
   @DeleteDateColumn()
   deletedAt: Date | null;
+
+  @OneToOne(() => Post,(post)=>post.blog)
+  public post: Post;
 
   // Статический метод для создания экземпляра
   static createInstance(dto: CreateBlogDomainDto): Blog {

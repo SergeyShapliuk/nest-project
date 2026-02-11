@@ -22,8 +22,9 @@ export class PostsQwRepository {
   ): Promise<PostViewDto> {
     const post = await this.postRepository.findOne({
       where: { id, deletedAt: IsNull() },
+      // relations: ['blog','blog.post'],
     });
-
+    console.log('oneToOnePost:', post);
     if (!post) {
       throw new NotFoundException('post not found');
     }

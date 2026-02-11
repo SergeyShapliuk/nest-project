@@ -62,7 +62,8 @@ export class SuperAdminPostsController {
   async getPostId(@Param('id') id: string,
                   @ExtractUserIfExistsFromRequest() user: { id: string } | null): Promise<PostViewDto> {
     // const queryInput = setDefaultSortAndPaginationIfNotExist(query);
-    console.log('getPostId', user);
+    console.log('getSaPostId', user);
+    console.log('getSaPostId', id);
     return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(new GetPostByIdQuery(id, user?.id || undefined));
 
   }

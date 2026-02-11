@@ -15,6 +15,7 @@ export class PostsRepository {
     console.log('id', id);
     return this.postRepository.findOne({
       where: { id, deletedAt: IsNull() },
+      relations: ['blog'],
     });
   }
 
@@ -24,7 +25,7 @@ export class PostsRepository {
 
   async findOrNotFoundFail(id: string): Promise<Post> {
     const post = await this.findById(id);
-
+    console.log('oneToOnePost:', post);
     if (!post) {
       throw new NotFoundException('post not found');
     }

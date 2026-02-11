@@ -15,6 +15,7 @@ export class BlogsRepository {
     console.log('id', id);
     return this.blogRepository.findOne({
       where: { id, deletedAt: IsNull() },
+      relations: ['post'],
     });
   }
 
@@ -24,7 +25,7 @@ export class BlogsRepository {
 
   async findOrNotFoundFail(id: string): Promise<Blog> {
     const blog = await this.findById(id);
-
+    console.log('oneToOneBlog:', blog);
     if (!blog) {
       //TODO: replace with domain exception
       throw new NotFoundException('blog not found');
