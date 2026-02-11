@@ -15,7 +15,6 @@ export class BlogsRepository {
     console.log('id', id);
     return this.blogRepository.findOne({
       where: { id, deletedAt: IsNull() },
-      relations: ['post'],
     });
   }
 

@@ -4,11 +4,10 @@ import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
-  Entity, JoinColumn, OneToOne,
+  Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Blog } from '../../blogs/domain/blog.entity';
 
 
 export const loginConstraints = {
@@ -61,7 +60,7 @@ export class Post extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: false })
   blogName: string;
   //
-  @Column({ type: 'uuid', nullable: true })// uuid length
+  @Column({ type: 'varchar', length: 36, nullable: false }) // uuid length
   blogId: string;
 
   // Для вложенного объекта в TypeORM используем @Column с type: 'json' или embedded entity
@@ -82,9 +81,9 @@ export class Post extends BaseEntity {
   @DeleteDateColumn()
   deletedAt: Date | null;
 
-  @OneToOne(() => Blog, (blog) => blog.post)
-  @JoinColumn({ name: 'blogId' })
-  public blog: Blog;
+  // @OneToOne(() => Blog,(blog)=>blog.post)
+  // @JoinColumn({ name: 'blogId' })
+  // public blog: Blog;
 
   // Метод для создания экземпляра
   static createInstance(dto: {
