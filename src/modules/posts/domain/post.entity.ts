@@ -61,7 +61,7 @@ export class Post extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: false })
   blogName: string;
   //
-  @Column({ type: 'uuid' })// uuid length
+  @Column({ type: 'uuid', nullable: true })// uuid length
   blogId: string;
 
   // Для вложенного объекта в TypeORM используем @Column с type: 'json' или embedded entity
@@ -82,7 +82,7 @@ export class Post extends BaseEntity {
   @DeleteDateColumn()
   deletedAt: Date | null;
 
-  @OneToOne(() => Blog,(blog)=>blog.post)
+  @OneToOne(() => Blog, (blog) => blog.post)
   @JoinColumn({ name: 'blogId' })
   public blog: Blog;
 
