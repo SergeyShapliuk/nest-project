@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, IsNull, MoreThan, Repository } from 'typeorm';
-import { EmailConfirmation, User } from '../domain/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { IsNull, MoreThan, Repository } from 'typeorm';
+import { User } from '../domain/user.entity';
 import { DomainException } from '../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
 
@@ -10,29 +10,30 @@ export class UsersRepository {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @InjectDataSource() protected dataSource: DataSource,
+    // @InjectDataSource() protected dataSource: DataSource,
   ) {
   }
 
-  // async findById(id: string): Promise<User | null> {
-  //   return this.userRepo.findOne({
-  //     where: {
-  //       id,
-  //       deletedAt: IsNull(),
-  //     },
-  //   });
-  // }
   async findById(id: string): Promise<User | null> {
-    const query = `
-    SELECT * FROM "users" 
-    WHERE "id" = $1 
-    AND "deleted_at" IS NULL
-    LIMIT 1;
-  `;
-
-    const result = await this.dataSource.query(query, [id]);
-    return result[0] || null;
+    return this.userRepo.findOne({
+      where: {
+        id,
+        deletedAt: IsNull(),
+      },
+    });
   }
+
+  // async findById(id: string): Promise<User | null> {
+  //   const query = `
+  //   SELECT * FROM "users"
+  //   WHERE "id" = $1
+  //   AND "deleted_at" IS NULL
+  //   LIMIT 1;
+  // `;
+  //
+  //   const result = await this.dataSource.query(query, [id]);
+  //   return result[0] || null;
+  // }
 
   async save(user: User): Promise<void> {
     const res = await this.userRepo.save(user);
