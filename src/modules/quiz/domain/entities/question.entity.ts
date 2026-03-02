@@ -18,7 +18,7 @@ export class Question {
   @Column()
   body: string;
 
-  @Column('simple-array') // ["answer1","answer2"]
+  @Column({ type: 'text', array: true })
   correctAnswers: string[];
 
   @Column({ default: false })
@@ -40,7 +40,7 @@ export class Question {
     const question = new Question();
 
     question.body = dto.body;
-    question.correctAnswers = dto.correctAnswers;
+    question.correctAnswers = dto.correctAnswers.map(a => a.trim());
     question.published = false;
     question.updatedAt = null;
 
@@ -74,10 +74,7 @@ export class Question {
       this.body = dto.body;
     }
     if (dto.correctAnswers !== undefined) {
-      // ВАЖНО: Проверяем и преобразуем в массив если нужно
-      this.correctAnswers = Array.isArray(dto.correctAnswers)
-        ? dto.correctAnswers
-        : [dto.correctAnswers];
+      this.correctAnswers = dto.correctAnswers.map(a => a.trim());
     }
     this.updatedAt=new Date()
   }

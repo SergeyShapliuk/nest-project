@@ -1,7 +1,6 @@
 import { CreateQuestionInputDto } from './questions.input-dto';
-import { ArrayMinSize, IsArray, IsDefined, IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
+import { ArrayMinSize, IsArray, IsDefined, IsNotEmpty, IsString, Length } from 'class-validator';
 import { Trim } from '../../../../core/decorators/transform/trim';
-import { Transform } from 'class-transformer';
 
 export class UpdateQuestionInputDto implements CreateQuestionInputDto {
   @IsDefined({ message: 'body is required' })
@@ -14,14 +13,5 @@ export class UpdateQuestionInputDto implements CreateQuestionInputDto {
   @ArrayMinSize(1, { message: 'At least one correct answer is required' })
   @IsString({ each: true, message: 'Each answer must be a string' })
   @IsNotEmpty({ each: true, message: 'Answers cannot be empty strings' })
-  @IsOptional()
-  @Transform(({ value }) => {
-    // Если пришла строка, преобразуем в массив
-    if (typeof value === 'string') {
-      return value.split(',').map(s => s.trim());
-    }
-    // Если пришел массив, возвращаем как есть
-    return value;
-  })
   correctAnswers: string[];
 }
