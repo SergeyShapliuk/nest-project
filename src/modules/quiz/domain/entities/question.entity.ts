@@ -74,7 +74,10 @@ export class Question {
       this.body = dto.body;
     }
     if (dto.correctAnswers !== undefined) {
-      this.correctAnswers = dto.correctAnswers;
+      // ВАЖНО: Проверяем и преобразуем в массив если нужно
+      this.correctAnswers = Array.isArray(dto.correctAnswers)
+        ? dto.correctAnswers
+        : [dto.correctAnswers];
     }
     this.updatedAt=new Date()
   }

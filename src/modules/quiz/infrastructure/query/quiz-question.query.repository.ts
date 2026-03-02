@@ -41,8 +41,8 @@ export class QuizQuestionQueryRepository {
     console.log({ queryDto });
 
     const qb = this.repo
-      .createQueryBuilder('b')
-      .where('b.deletedAt IS NULL');
+      .createQueryBuilder('q')
+      .where('q.deletedAt IS NULL');
 
     /* ========= FILTER BY PUBLISHED STATUS ========= */
 
@@ -58,7 +58,7 @@ export class QuizQuestionQueryRepository {
     if (bodySearchTerm) {
       qb.andWhere(
         new Brackets(qb2 => {
-          qb2.where('b.name ILIKE :bodySearchTerm', {
+          qb2.where('q.body ILIKE :bodySearchTerm', {
             bodySearchTerm: `%${bodySearchTerm.trim()}%`,
           });
           // Если нужно искать в других полях, добавляем orWhere:
@@ -78,14 +78,14 @@ export class QuizQuestionQueryRepository {
 
     // Явно задаём collation для сортировки по name,
     // чтобы порядок совпадал с ожидаемым в автотестах
-    if (safeSortBy === 'name') {
+    if (safeSortBy === 'body') {
       qb.orderBy(
-        `b.${safeSortBy} COLLATE "C"`,
+        `q.${safeSortBy} COLLATE "C"`,
         safeSortDirection,
       );
     } else {
       qb.orderBy(
-        `b.${safeSortBy}`,
+        `q.${safeSortBy}`,
         safeSortDirection,
       );
     }
