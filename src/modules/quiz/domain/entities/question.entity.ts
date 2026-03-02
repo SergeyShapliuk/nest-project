@@ -1,9 +1,20 @@
-import { Entity, Column, DeleteDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  Column,
+  DeleteDateColumn,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { BaseEntity } from '../../../../core/entities/base.entity';
 import { GameQuestion } from './game-question.entity';
 
 @Entity('questions')
-export class Question extends BaseEntity {
+export class Question {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
   @Column()
   body: string;
 
@@ -16,6 +27,12 @@ export class Question extends BaseEntity {
   @DeleteDateColumn()
   deletedAt: Date | null;
 
+  @CreateDateColumn({ type: 'timestamp with time zone' })
+  createdAt: Date;
+
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  updatedAt: Date | null;
+
   @OneToMany(() => GameQuestion, (gq) => gq.question)
   gameQuestions: GameQuestion[];
 
@@ -25,16 +42,19 @@ export class Question extends BaseEntity {
     question.body = dto.body;
     question.correctAnswers = dto.correctAnswers;
     question.published = false;
+    question.updatedAt = null;
 
     return question;
   }
 
   publish(): void {
     this.published = true;
+    this.updatedAt=new Date()
   }
 
   unpublish(): void {
     this.published = false;
+    this.updatedAt=new Date()
   }
 
   /**
@@ -56,11 +76,13 @@ export class Question extends BaseEntity {
     if (dto.correctAnswers !== undefined) {
       this.correctAnswers = dto.correctAnswers;
     }
+    this.updatedAt=new Date()
   }
 
   updatePublish(dto: { published?: boolean }): void {
     if (dto.published !== undefined) {
       this.published = dto.published;
+      this.updatedAt=new Date()
     }
   }
 }
