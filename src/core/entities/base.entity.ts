@@ -12,6 +12,6 @@ export abstract class BaseEntity {
   @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp with time zone' })
-  updatedAt: Date;
+  @UpdateDateColumn({ type: 'timestamp with time zone', nullable: true })
+  updatedAt: Date | null;
 }
