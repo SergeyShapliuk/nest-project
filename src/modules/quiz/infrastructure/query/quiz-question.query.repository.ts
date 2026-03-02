@@ -1,55 +1,65 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Brackets, IsNull } from 'typeorm';
-import { Blog } from '../../domain/blog.entity';
-import { GetBlogsQueryParams } from '../../api/input-dto/get-blogs-query-params.input-dto';
-import { BlogViewDto } from '../../api/view-dto/blogs.view-dto';
+import { Repository, IsNull, Brackets } from 'typeorm';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
+import { QuestionViewDto } from '../../api/view-dto/quiz.question.view-dto';
+import { GetQuestionsQueryParams, PublishedStatus } from '../../api/input-dto/get-questions-query-params.input-dto';
+import { Question } from '../../domain/entities/question.entity';
+
 
 @Injectable()
-export class BlogsQwRepository {
+export class QuizQuestionQueryRepository {
   constructor(
-    @InjectRepository(Blog)
-    private readonly blogRepository: Repository<Blog>,
-  ) {
-  }
+    @InjectRepository(Question)
+    private readonly repo: Repository<Question>,
+  ) {}
 
-  async getByIdOrNotFoundFail(id: string): Promise<BlogViewDto> {
-    const blog = await this.blogRepository.findOne({
+  async getByIdOrNotFoundFail(id: string): Promise<QuestionViewDto> {
+    const question = await this.repo.findOne({
       where: { id, deletedAt: IsNull() },
     });
 
-    if (!blog) {
-      throw new NotFoundException('blog not found');
+    if (!question) {
+      throw new NotFoundException('question not found');
     }
 
-    return BlogViewDto.mapToView(blog);
+    return QuestionViewDto.mapToView(question);
   }
 
   async getAll(
-    queryDto: GetBlogsQueryParams,
-  ): Promise<PaginatedViewDto<BlogViewDto[]>> {
+    queryDto: GetQuestionsQueryParams,
+  ): Promise<PaginatedViewDto<QuestionViewDto[]>> {
     const {
       pageNumber,
       pageSize,
       sortBy,
       sortDirection,
-      searchNameTerm,
+      bodySearchTerm,
+      publishedStatus
     } = queryDto;
 
     console.log({ queryDto });
 
-    const qb = this.blogRepository
+    const qb = this.repo
       .createQueryBuilder('b')
       .where('b.deletedAt IS NULL');
 
+    /* ========= FILTER BY PUBLISHED STATUS ========= */
+
+    if (publishedStatus === PublishedStatus.Published) {
+      qb.andWhere('q.published = :published', { published: true });
+    } else if (publishedStatus === PublishedStatus.NotPublished) {
+      qb.andWhere('q.published = :published', { published: false });
+    }
+    // Если All - не добавляем фильтр по published
+
     /* ========= SEARCH ========= */
 
-    if (searchNameTerm) {
+    if (bodySearchTerm) {
       qb.andWhere(
         new Brackets(qb2 => {
-          qb2.where('b.name ILIKE :searchName', {
-            searchName: `%${searchNameTerm.trim()}%`,
+          qb2.where('b.name ILIKE :bodySearchTerm', {
+            bodySearchTerm: `%${bodySearchTerm.trim()}%`,
           });
           // Если нужно искать в других полях, добавляем orWhere:
           // qb2.orWhere('b.description ILIKE :searchName', {
@@ -86,9 +96,9 @@ export class BlogsQwRepository {
 
     /* ========= EXECUTE ========= */
 
-    const [blogs, totalCount] = await qb.getManyAndCount();
+    const [questions, totalCount] = await qb.getManyAndCount();
 
-    const items = blogs.map(BlogViewDto.mapToView);
+    const items = questions.map(QuestionViewDto.mapToView);
 
     return PaginatedViewDto.mapToView({
       items,
@@ -101,15 +111,13 @@ export class BlogsQwRepository {
   // Вспомогательный метод для валидации поля сортировки
   private validateSortBy(sortBy: string): string {
     const allowedSortFields = [
-      'name',
-      'description',
-      'websiteUrl',
-      'isMembership',
       'createdAt',
       'updatedAt',
+      'body',
+      'published',
+      'id'
     ];
 
     return allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
   }
-
 }

@@ -21,6 +21,7 @@ import { configModule } from './config-dynamic-module';
 import { CoreConfig } from './core/config/core.config';
 import { CommentModule } from './modules/coments/comment.module';
 import databaseConf, { DatabaseConfig } from './core/config/db.config';
+import { QuizModule } from './modules/quiz/quiz.module';
 
 // const mongooseOptions: MongooseModuleAsyncOptions = {
 //   imports: [configModule],
@@ -81,7 +82,7 @@ import databaseConf, { DatabaseConfig } from './core/config/db.config';
     //     },
     //   ],
     // }),
-    UserModule, PostModule, BlogModule, TestingModule, CoreModule, NotificationsModule, CommentModule, configModule],
+    UserModule, PostModule, BlogModule, TestingModule, CoreModule, NotificationsModule, CommentModule, configModule, QuizModule],
   controllers: [AppController],
   providers: [AppService,
     // {
