@@ -54,8 +54,7 @@ export class Game extends BaseEntity {
       return null;
     }
 
-    return this.questions
-      .sort((a, b) => a.order - b.order)[index];
+    return this.questions[index];
   }
 
   answerQuestion(
