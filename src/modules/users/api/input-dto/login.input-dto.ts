@@ -11,11 +11,12 @@ import { IsStringWithTrim } from '../../../../core/decorators/validation/is-stri
 
 //dto для боди при создании юзера. Сюда могут быть добавлены декораторы swagger
 export class LoginInputDto  {
-  @IsStringWithTrim(loginConstraints.minLength, loginConstraints.maxLength)
+  @IsString()
+  // @IsStringWithTrim(loginConstraints.minLength, loginConstraints.maxLength)
   loginOrEmail: string;
 
   @IsString()
-  @Length(passwordConstraints.minLength, passwordConstraints.maxLength)
-  @Trim()
+  // @Length(passwordConstraints.minLength, passwordConstraints.maxLength)
+  // @Trim()
   password: string;
 }

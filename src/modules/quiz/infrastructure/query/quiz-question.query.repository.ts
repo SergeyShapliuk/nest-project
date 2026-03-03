@@ -78,17 +78,17 @@ export class QuizQuestionQueryRepository {
 
     // Явно задаём collation для сортировки по name,
     // чтобы порядок совпадал с ожидаемым в автотестах
-    if (safeSortBy === 'body') {
-      qb.orderBy(
-        `q.${safeSortBy} COLLATE "C"`,
-        safeSortDirection,
-      );
-    } else {
+    // if (safeSortBy === 'body') {
+    //   qb.orderBy(
+    //     `q.${safeSortBy} COLLATE "C"`,
+    //     safeSortDirection,
+    //   );
+    // } else {
       qb.orderBy(
         `q.${safeSortBy}`,
         safeSortDirection,
       );
-    }
+    // }
 
     /* ========= PAGINATION ========= */
 
