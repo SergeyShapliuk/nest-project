@@ -20,9 +20,10 @@ import { SuperAdminQuizController } from './api/super.admin.quiz.controller';
 import { QuizQuestionQueryRepository } from './infrastructure/query/quiz-question.query.repository';
 import { QuizQuestionRepository } from './infrastructure/quiz-question.repository';
 import { DeleteQuestionUseCase } from './application/usecases/delete-question.usecase';
+import { AnswerGameUseCase } from './application/usecases/answer-game.usecase';
 
 const commandHandlers = [
-  JoinGameUseCase, CreateQuestionUseCase, UpdateQuestionUseCase, UpdateQuestionPublishUseCase,DeleteQuestionUseCase
+  JoinGameUseCase, CreateQuestionUseCase, UpdateQuestionUseCase, UpdateQuestionPublishUseCase, DeleteQuestionUseCase, AnswerGameUseCase,
 ];
 
 const queryHandlers = [GetMyCurrentGameHandler, GetGameByIdHandler, GetQuizQuestionsHandler];

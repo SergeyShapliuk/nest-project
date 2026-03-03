@@ -57,7 +57,7 @@ export class GameRepository {
 
     if (existingGame) {
       throw new DomainException({
-        code: DomainExceptionCode.BadRequest,
+        code: DomainExceptionCode.Forbidden,
         message: 'User already in active game',
       });
     }
@@ -223,6 +223,23 @@ export class GameRepository {
     await this.checkFinish(game);
   }
 
+  async findActiveGameByUser(userId: string): Promise<Game | null> {
+    return this.gameRepo
+      .createQueryBuilder('g')
+      .leftJoinAndSelect('g.players', 'p')
+      .leftJoinAndSelect('p.answers', 'a')
+      .leftJoinAndSelect('g.questions', 'gq')
+      .leftJoinAndSelect('gq.question', 'q')
+      .where('p.userId = :userId', { userId })
+      .andWhere('g.status = :status', {
+        status: GameStatus.ACTIVE,
+      })
+      .getOne();
+  }
+
+  async save(game: Game) {
+    await this.gameRepo.save(game);
+  }
   /* ==================== FINISH LOGIC ==================== */
 
   private async checkFinish(game: Game): Promise<void> {

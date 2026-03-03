@@ -12,7 +12,8 @@ export class QuizQuestionQueryRepository {
   constructor(
     @InjectRepository(Question)
     private readonly repo: Repository<Question>,
-  ) {}
+  ) {
+  }
 
   async getByIdOrNotFoundFail(id: string): Promise<QuestionViewDto> {
     const question = await this.repo.findOne({
@@ -35,7 +36,7 @@ export class QuizQuestionQueryRepository {
       sortBy,
       sortDirection,
       bodySearchTerm,
-      publishedStatus
+      publishedStatus,
     } = queryDto;
 
     console.log({ queryDto });
@@ -84,10 +85,10 @@ export class QuizQuestionQueryRepository {
     //     safeSortDirection,
     //   );
     // } else {
-      qb.orderBy(
-        `q.${safeSortBy}`,
-        safeSortDirection,
-      );
+    qb.orderBy(
+      `q.${safeSortBy}`,
+      safeSortDirection,
+    ).addOrderBy('q.createdAt', 'ASC');
     // }
 
     /* ========= PAGINATION ========= */
@@ -115,7 +116,7 @@ export class QuizQuestionQueryRepository {
       'updatedAt',
       'body',
       'published',
-      'id'
+      'id',
     ];
 
     return allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';

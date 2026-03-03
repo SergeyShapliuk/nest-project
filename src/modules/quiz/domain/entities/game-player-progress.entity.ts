@@ -21,4 +21,5 @@ export class PlayerProgress extends BaseEntity {
 
   @OneToMany(() => Answer, (a) => a.player, { cascade: true })
   answers: Answer[];
+
 }
