@@ -88,10 +88,11 @@ export class GameRepository {
         .limit(5)
         .getMany();
 
-      pendingGame.questions = questions.map((q) =>
+      pendingGame.questions = questions.map((q,index) =>
         this.gameQuestionRepo.create({
           game: pendingGame,
           question: q,
+          order: index + 1,
         }),
       );
 
