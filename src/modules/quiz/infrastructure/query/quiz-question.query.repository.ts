@@ -85,8 +85,12 @@ export class QuizQuestionQueryRepository {
     //     safeSortDirection,
     //   );
     // } else {
-    qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
-
+    // qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
+    if (safeSortBy === 'body') {
+      qb.orderBy(`q.${safeSortBy} COLLATE "C"`, safeSortDirection);
+    } else {
+      qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
+    }
     if (safeSortBy !== 'createdAt') {
       qb.addOrderBy('q.id', 'ASC');
     }

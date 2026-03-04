@@ -59,13 +59,14 @@ export class JoinGameUseCase
     return this.dataSource.transaction(async () => {
       const active =
         await this.repo.findActiveByUser(command.userId);
-
+      console.log('active', active);
       if (active) {
-        GameViewDto.map(active);
-        // throw new DomainException({
-        //   code: DomainExceptionCode.Forbidden,
-        //   message: 'User already participating in active game',
-        // });
+        // return GameViewDto.map(active);
+
+        throw new DomainException({
+          code: DomainExceptionCode.Forbidden,
+          message: 'User already participating in active game',
+        });
       }
 
       const pending = await this.repo.findPendingGame();
