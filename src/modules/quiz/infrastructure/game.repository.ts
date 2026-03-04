@@ -293,13 +293,12 @@ export class GameRepository {
   constructor(
     @InjectRepository(Game)
     private readonly gameRepo: Repository<Game>,
-
     @InjectRepository(PlayerProgress)
     private readonly progressRepo: Repository<PlayerProgress>,
-
     @InjectRepository(Question)
     private readonly questionRepo: Repository<Question>,
-  ) {}
+  ) {
+  }
 
   /* ================= LOAD ================= */
 
@@ -333,6 +332,7 @@ export class GameRepository {
       .leftJoinAndSelect('g.questions', 'gq')
       .leftJoinAndSelect('gq.question', 'q')
       .where('(fpu.id = :userId OR spu.id = :userId)', { userId })
+      .andWhere('g.status = :status', { status: GameStatus.ACTIVE })
       .andWhere('g.deletedAt IS NULL')
       .getOne();
   }

@@ -61,7 +61,10 @@ export class JoinGameUseCase
         await this.repo.findActiveByUser(command.userId);
 
       if (active) {
-        return GameViewDto.map(active);
+        throw new DomainException({
+          code: DomainExceptionCode.Forbidden,
+          message: 'User already participating in active game',
+        });
       }
 
       const pending = await this.repo.findPendingGame();

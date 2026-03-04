@@ -10,8 +10,9 @@ export class QuizQuestionRepository {
     // @InjectRepository(GameQuestion)
     // private readonly GameQuestionRepo: Repository<GameQuestion>,
     @InjectRepository(Question)
-    private questionRepository: Repository<Question>
-  ) {}
+    private questionRepository: Repository<Question>,
+  ) {
+  }
 
   async save(question: Question): Promise<Question> {
     return this.questionRepository.save(question);
@@ -25,7 +26,7 @@ export class QuizQuestionRepository {
 
   async findByIdOrFail(id: string): Promise<Question> {
     const question = await this.findById(id);
-    if (!question) throw new Error('Question not found');
+    if (!question) throw new NotFoundException('Question not found');
     return question;
   }
 

@@ -13,14 +13,14 @@ export class DeleteQuestionUseCase
   constructor(private quizQuestionRepository: QuizQuestionRepository) {
   }
 
-  async execute(command: DeleteQuestionCommand) {
-    await this.quizQuestionRepository.softDelete(command.id);
-  }
-  // async execute({ id }: DeleteQuestionCommand): Promise<void> {
-  //   const question = await this.quizQuestionRepository.findOrNotFoundFail(id);
-  //
-  //   question.makeDeleted();
-  //
-  //   await this.quizQuestionRepository.save(question);
+  // async execute(command: DeleteQuestionCommand): Promise<void> {
+  //   await this.quizQuestionRepository.softDelete(command.id);
   // }
+  async execute({ id }: DeleteQuestionCommand): Promise<void> {
+    const question = await this.quizQuestionRepository.findByIdOrFail(id);
+
+    question.makeDeleted();
+
+    await this.quizQuestionRepository.save(question);
+  }
 }

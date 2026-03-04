@@ -3,6 +3,8 @@ import { ForbiddenException } from '@nestjs/common';
 import { GameRepository } from '../../infrastructure/game.repository';
 import { AnswerViewDto } from '../../api/view-dto/quiz.answer.view-dto';
 import { DataSource } from 'typeorm';
+import { DomainException } from '../../../../core/exceptions/domain-exceptions';
+import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
 
 export class AnswerGameCommand {
   constructor(
@@ -65,7 +67,10 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
         await this.repo.findActiveByUser(command.userId);
 
       if (!game) {
-        throw new Error('Game not found');
+        throw new DomainException({
+          code: DomainExceptionCode.Forbidden,
+          message: 'Game not found',
+        });
       }
 
       const answer = game.submitAnswer(

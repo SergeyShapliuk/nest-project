@@ -75,8 +75,8 @@ export class SuperAdminQuizController {
   }
 
   @ApiParam({ name: 'id' }) //для сваггер
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(@Param('id') id: string): Promise<void> {
