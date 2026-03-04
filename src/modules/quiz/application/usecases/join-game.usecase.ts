@@ -68,7 +68,7 @@ export class JoinGameUseCase
       }
 
       const pending = await this.repo.findPendingGame();
-
+// console.log({pending})
       const progress =
         await this.repo.createProgress(command.userId);
 
@@ -85,7 +85,7 @@ export class JoinGameUseCase
 
       const questions =
         await this.repo.getRandomPublishedQuestions(5);
-
+// console.log({questions})
       pending.questions = questions.map((q, i) => {
         const gq = new GameQuestion();
         gq.question = q;

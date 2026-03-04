@@ -324,15 +324,15 @@ export class GameRepository {
     return this.gameRepo
       .createQueryBuilder('g')
       .leftJoinAndSelect('g.firstPlayer', 'fp')
-      .leftJoinAndSelect('fp.user', 'fpu')
-      .leftJoinAndSelect('fp.answers', 'fpa')
+      .leftJoinAndSelect('fp.user', 'fpUser')
       .leftJoinAndSelect('g.secondPlayer', 'sp')
-      .leftJoinAndSelect('sp.user', 'spu')
-      .leftJoinAndSelect('sp.answers', 'spa')
+      .leftJoinAndSelect('sp.user', 'spUser')
       .leftJoinAndSelect('g.questions', 'gq')
       .leftJoinAndSelect('gq.question', 'q')
-      .where('(fpu.id = :userId OR spu.id = :userId)', { userId })
-      .andWhere('g.status = :status', { status: GameStatus.ACTIVE })
+      .where('(fpUser.id = :userId OR spUser.id = :userId)', { userId })
+      .andWhere('g.status IN (:...statuses)', {
+        statuses: [GameStatus.PENDING_SECOND_PLAYER, GameStatus.ACTIVE],
+      })
       .andWhere('g.deletedAt IS NULL')
       .getOne();
   }

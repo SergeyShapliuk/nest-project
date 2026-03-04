@@ -50,7 +50,7 @@ export class Question {
 
   checkAnswer(answer: string): boolean {
     const normalized = answer.trim();
-    return this.correctAnswers.includes(normalized);
+    return this.correctAnswers.some(a => a.toLowerCase() === normalized.toLowerCase());
   }
 
   publish(): void {

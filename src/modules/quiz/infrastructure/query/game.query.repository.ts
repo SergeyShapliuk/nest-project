@@ -36,9 +36,10 @@ export class GameQueryRepository {
       .where('(fpUser.id = :userId OR spUser.id = :userId)', {
         userId,
       })
-      .andWhere('g.status = :status', {
-        status: GameStatus.ACTIVE,
-      })
+      .andWhere(
+        'g.status = ANY(:statuses::pair_games_status_enum[])',
+        { statuses: [GameStatus.PENDING_SECOND_PLAYER, GameStatus.ACTIVE] }
+      )
       .andWhere('g.deletedAt IS NULL')
       .orderBy('g.createdAt', 'DESC')
       .getOne();

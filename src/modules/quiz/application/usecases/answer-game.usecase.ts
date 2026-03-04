@@ -72,12 +72,22 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
           message: 'Game not found',
         });
       }
-
-      const answer = game.submitAnswer(
-        command.userId,
-        command.answer,
+console.log({command})
+      const player = game.players.find(
+        p => p.user.id === command.userId,
       );
 
+      if (!player) {
+        throw new DomainException({
+          code: DomainExceptionCode.Forbidden,
+          message: 'Player not in game',
+        });
+      }
+      const answer = game.submitAnswer(
+        player.id,
+        command.answer,
+      );
+      console.log({answer})
       await this.repo.save(game);
 
       return {

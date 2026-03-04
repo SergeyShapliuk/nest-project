@@ -31,8 +31,8 @@ export class SuperAdminQuizController {
     private readonly queryBus: QueryBus) {
   }
 
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
   @Get()
   async getAll(@Query() query: GetQuestionsQueryParams,
                @ExtractUserIfExistsFromRequest() user: { id: string } | null): Promise<PaginatedViewDto<QuestionViewDto[]>> {
@@ -40,8 +40,8 @@ export class SuperAdminQuizController {
     return this.queryBus.execute<GetQuizQuestionsQuery, PaginatedViewDto<QuestionViewDto[]>>(new GetQuizQuestionsQuery(query));
   }
 
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
   @Post()
   async createQuestion(@Body() body: CreateQuestionInputDto): Promise<QuestionViewDto> {
 
@@ -52,8 +52,8 @@ export class SuperAdminQuizController {
 
   }
 
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateQuestion(
@@ -63,8 +63,8 @@ export class SuperAdminQuizController {
     return this.commandBus.execute<UpdateQuestionCommand, void>(new UpdateQuestionCommand(id, body));
   }
 
-  @ApiBasicAuth('basicAuth')
-  @UseGuards(BasicAuthGuard)
+  // @ApiBasicAuth('basicAuth')
+  // @UseGuards(BasicAuthGuard)
   @Put(':id/publish')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateQuestionPublish(
@@ -74,9 +74,9 @@ export class SuperAdminQuizController {
     return this.commandBus.execute<UpdateQuestionPublishCommand, void>(new UpdateQuestionPublishCommand(id, body));
   }
 
-  @ApiParam({ name: 'id' }) //для сваггер
+  // @ApiParam({ name: 'id' }) //для сваггер
   // @ApiBasicAuth('basicAuth')
-  // @UseGuards(BasicAuthGuard)
+  @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(@Param('id') id: string): Promise<void> {

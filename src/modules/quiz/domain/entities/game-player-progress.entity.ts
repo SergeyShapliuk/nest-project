@@ -10,7 +10,7 @@ import { User } from '../../../users/domain/user.entity';
 
 @Entity('player_progress')
 export class PlayerProgress extends BaseEntity {
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { eager: true })
   user: User;
 
   @Column({ default: 0 })

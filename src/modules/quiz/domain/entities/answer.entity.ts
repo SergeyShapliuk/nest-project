@@ -27,27 +27,13 @@ export class Answer extends BaseEntity {
   @CreateDateColumn({ type: 'timestamp with time zone' })
   addedAt: Date;
 
-  static create(
-    player: PlayerProgress,
-    question: Question,
-    answerText: string,
-  ): Answer {
-    const answer = new Answer();
-
-    const normalized = answerText.trim();
-    const isCorrect = question.checkAnswer(normalized);
-
-    answer.player = player;
-    answer.question = question;
-    answer.answer = normalized;
-    answer.status = isCorrect
-      ? AnswerStatus.CORRECT
-      : AnswerStatus.INCORRECT;
-
-    if (isCorrect) {
-      player.addScore();
-    }
-
-    return answer;
+  static create(player: PlayerProgress, question: Question, answer: string, isCorrect: boolean): Answer {
+    const a = new Answer();
+    a.player = player;
+    a.question = question;
+    a.answer = answer;
+    a.status = isCorrect ? AnswerStatus.CORRECT : AnswerStatus.INCORRECT;
+    a.addedAt = new Date();
+    return a;
   }
 }
