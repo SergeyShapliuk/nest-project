@@ -42,6 +42,7 @@ export class GameQueryRepository {
       )
       .andWhere('g.deletedAt IS NULL')
       .orderBy('g.createdAt', 'DESC')
+      .addOrderBy('gq.order', 'ASC')
       .getOne();
 
     if (!game) return null;

@@ -60,14 +60,6 @@ export class Game extends BaseEntity {
     this.startGameDate = new Date();
   }
 
-  getNextQuestion(playerId: string): GameQuestion | null {
-    const player = this.players.find(p => p.id === playerId);
-    if (!player) return null;
-    const index = player.answerCount();
-    if (!this.questions || index >= this.questions.length) return null;
-    return this.questions.sort((a, b) => a.order - b.order)[index];
-  }
-
   submitAnswer(playerId: string, answerText: string): Answer {
     if (!this.isActive()) {
       throw new DomainException({
@@ -85,21 +77,40 @@ export class Game extends BaseEntity {
       });
     }
 
-    const nextQuestion = this.getNextQuestion(playerId);
-    if (!nextQuestion) {
+    if (!player.answers) {
+      player.answers = []; // гарантируем инициализацию массива
+    }
+    const currentIndex = player.answerCount();
+
+    if (currentIndex >= this.questions.length) {
       throw new DomainException({
         code: DomainExceptionCode.Forbidden,
-        message: 'No more questions',
+        message: 'All questions already answered',
       });
     }
 
-    const isCorrect = nextQuestion.question.checkAnswer(answerText);
-    const answer = Answer.create(player, nextQuestion.question, answerText, isCorrect);
+    const gameQuestion = this.questions[currentIndex];
 
-    if (!player.answers) player.answers = [];
+    const isCorrect = gameQuestion.question.checkAnswer(answerText);
+    const answer = Answer.create(
+      player,
+      gameQuestion.question,
+      answerText,
+      isCorrect,
+    );
+
     player.answers.push(answer);
+    console.log('player.answers', player.answers);
+    console.log('gameQuestion', gameQuestion);
+    console.log('this.questions', this.questions);
+    console.log('currentIndex', currentIndex);
+    if (isCorrect) {
+      player.addScore();
+    }
 
-    if (isCorrect) player.score++;
+    if (player.answerCount() === this.questions.length) {
+      player.markFinished();
+    }
 
     this.checkFinish();
 
@@ -107,10 +118,44 @@ export class Game extends BaseEntity {
   }
 
   private checkFinish(): void {
-    if (this.players.every(p => p.answerCount() >= 5)) {
-      this.status = GameStatus.FINISHED;
-      this.finishGameDate = new Date();
-      this.players.forEach(p => p.markFinished());
+    if (!this.secondPlayer) return;
+
+    const first = this.firstPlayer;
+    const second = this.secondPlayer;
+
+    const firstFinished = first.answerCount() >= 5;
+    const secondFinished = second.answerCount() >= 5;
+
+    if (!firstFinished || !secondFinished) return;
+
+    // оба закончили — игра завершается
+    this.status = GameStatus.FINISHED;
+    this.finishGameDate = new Date();
+
+    first.markFinished();
+    second.markFinished();
+
+    // ===== БОНУС =====
+
+    const firstHasCorrect = first.score > 0;
+    const secondHasCorrect = second.score > 0;
+
+    if (
+      first.finishedAt &&
+      second.finishedAt &&
+      first.finishedAt < second.finishedAt &&
+      firstHasCorrect
+    ) {
+      first.score += 1;
+    }
+
+    if (
+      first.finishedAt &&
+      second.finishedAt &&
+      second.finishedAt < first.finishedAt &&
+      secondHasCorrect
+    ) {
+      second.score += 1;
     }
   }
 }

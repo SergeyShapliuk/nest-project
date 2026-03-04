@@ -85,10 +85,11 @@ export class QuizQuestionQueryRepository {
     //     safeSortDirection,
     //   );
     // } else {
-    qb.orderBy(
-      `q.${safeSortBy}`,
-      safeSortDirection,
-    ).addOrderBy('q.createdAt', 'ASC');
+    qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
+
+    if (safeSortBy !== 'createdAt') {
+      qb.addOrderBy('q.createdAt', 'DESC');
+    }
     // }
 
     /* ========= PAGINATION ========= */

@@ -5,6 +5,9 @@ import { AnswerViewDto } from '../../api/view-dto/quiz.answer.view-dto';
 import { DataSource } from 'typeorm';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
+import { Answer } from '../../domain/entities/answer.entity';
+import { PlayerProgress } from '../../domain/entities/game-player-progress.entity';
+import { Game } from '../../domain/entities/game.entity';
 
 export class AnswerGameCommand {
   constructor(
@@ -62,7 +65,7 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
   //   return AnswerViewDto.map(createdAnswer);
   // }
   async execute(command: AnswerGameCommand) {
-    return this.dataSource.transaction(async () => {
+    return this.dataSource.transaction(async (manager) => {
       const game =
         await this.repo.findActiveByUser(command.userId);
 
@@ -87,13 +90,18 @@ console.log({command})
         player.id,
         command.answer,
       );
-      console.log({answer})
-      await this.repo.save(game);
+      console.log("answer",answer)
+      console.log("player.id",player.id)
+      console.log("command.answer",command.answer)
+      await manager.getRepository(Answer).save(answer); // обязательно сохраняем сам ответ
+      await manager.getRepository(PlayerProgress).save(player); // сохраняем прогресс игрока
+      await manager.getRepository(Game).save(game); // сохраняем игру (статус, даты)
 
       return {
         questionId: answer.question.id,
         answerStatus: answer.status,
         addedAt: answer.addedAt,
+        // answerId: answer.id, // теперь id точно будет
       };
     });
   }

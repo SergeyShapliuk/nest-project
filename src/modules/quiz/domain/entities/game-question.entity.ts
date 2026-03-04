@@ -11,6 +11,6 @@ export class GameQuestion extends BaseEntity {
   @ManyToOne(() => Question)
   question: Question;
 
-  @Column()
+  @Column({ type: 'int' })
   order: number; // 🔥 обязательно для стабильного порядка
 }
