@@ -1,7 +1,7 @@
 import {
   Entity,
   ManyToOne,
-  Column,
+  Column, CreateDateColumn,
 } from 'typeorm';
 import { PlayerProgress } from './game-player-progress.entity';
 import { BaseEntity } from '../../../../core/entities/base.entity';
@@ -24,23 +24,30 @@ export class Answer extends BaseEntity {
   @Column({ type: 'enum', enum: AnswerStatus })
   status: AnswerStatus;
 
-  @Column({ type: 'timestamp with time zone' })
+  @CreateDateColumn({ type: 'timestamp with time zone' })
   addedAt: Date;
 
   static create(
     player: PlayerProgress,
     question: Question,
-    answer: string,
-    isCorrect: boolean,
+    answerText: string,
   ): Answer {
-    const a = new Answer();
-    a.player = player;
-    a.question = question;
-    a.answer = answer;
-    a.status = isCorrect
+    const answer = new Answer();
+
+    const normalized = answerText.trim();
+    const isCorrect = question.checkAnswer(normalized);
+
+    answer.player = player;
+    answer.question = question;
+    answer.answer = normalized;
+    answer.status = isCorrect
       ? AnswerStatus.CORRECT
       : AnswerStatus.INCORRECT;
-    a.addedAt = new Date();
-    return a;
+
+    if (isCorrect) {
+      player.addScore();
+    }
+
+    return answer;
   }
 }

@@ -6,20 +6,35 @@ export class UpdateQuestionCommand {
   constructor(
     public id: string,
     public dto: UpdateQuestionInputDto,
-  ) {}
+  ) {
+  }
 }
 
 @CommandHandler(UpdateQuestionCommand)
 export class UpdateQuestionUseCase
-  implements ICommandHandler<UpdateQuestionCommand, void>
-{
-  constructor(private quizQuestionRepository: QuizQuestionRepository) {}
+  implements ICommandHandler<UpdateQuestionCommand, void> {
+  constructor(
+    // private quizQuestionRepository: QuizQuestionRepository
+    private readonly repo: QuizQuestionRepository,
+  ) {
+  }
 
-  async execute({ id, dto }: UpdateQuestionCommand): Promise<void> {
-    const entity = await this.quizQuestionRepository.findOrNotFoundFail(id);
+  // async execute({ id, dto }: UpdateQuestionCommand): Promise<void> {
+  //   const entity = await this.quizQuestionRepository.findOrNotFoundFail(id);
+  //
+  //   entity.update(dto);
+  //
+  //   await this.quizQuestionRepository.save(entity);
+  // }
+  async execute(command: UpdateQuestionCommand) {
+    const question =
+      await this.repo.findByIdOrFail(command.id);
 
-    entity.update(dto);
+    question.update({
+      body: command.dto.body,
+      correctAnswers: command.dto.correctAnswers,
+    });
 
-    await this.quizQuestionRepository.save(entity);
+    await this.repo.save(question);
   }
 }

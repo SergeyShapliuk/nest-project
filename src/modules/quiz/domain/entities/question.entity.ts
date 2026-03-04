@@ -24,14 +24,14 @@ export class Question {
   @Column({ default: false })
   published: boolean;
 
-  @DeleteDateColumn()
-  deletedAt: Date | null;
-
   @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
   @Column({ type: 'timestamp with time zone', nullable: true })
   updatedAt: Date | null;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 
   @OneToMany(() => GameQuestion, (gq) => gq.question)
   gameQuestions: GameQuestion[];
@@ -39,12 +39,17 @@ export class Question {
   static createInstance(dto: { body: string, correctAnswers: string[] }): Question {
     const question = new Question();
 
-    question.body = dto.body;
+    question.body = dto.body.trim();
     question.correctAnswers = dto.correctAnswers.map(a => a.trim());
     question.published = false;
     question.updatedAt = null;
 
     return question;
+  }
+
+  checkAnswer(answer: string): boolean {
+    const normalized = answer.trim();
+    return this.correctAnswers.includes(normalized);
   }
 
   publish(): void {

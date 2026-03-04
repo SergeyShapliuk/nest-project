@@ -2,6 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ForbiddenException } from '@nestjs/common';
 import { GameRepository } from '../../infrastructure/game.repository';
 import { AnswerViewDto } from '../../api/view-dto/quiz.answer.view-dto';
+import { DataSource } from 'typeorm';
 
 export class AnswerGameCommand {
   constructor(
@@ -14,47 +15,71 @@ export class AnswerGameCommand {
 @CommandHandler(AnswerGameCommand)
 export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
   constructor(
-    private readonly gameRepository: GameRepository,
+    // private readonly gameRepository: GameRepository,
+    private readonly repo: GameRepository,
+    private readonly dataSource: DataSource,
   ) {
   }
 
+  // async execute(command: AnswerGameCommand) {
+  //   const { userId, answer } = command;
+  //
+  //   // 1️⃣ Найти активную игру
+  //   const game = await this.gameRepository.findActiveByUser(userId);
+  //
+  //   if (!game) {
+  //     throw new ForbiddenException();
+  //   }
+  //
+  //   // 2️⃣ Найти игрока
+  //   const player = game.players.find(
+  //     p => p.user.id === userId,
+  //   );
+  //
+  //   if (!player) {
+  //     throw new ForbiddenException();
+  //   }
+  //
+  //   // 3️⃣ Получить следующий вопрос
+  //   const question =
+  //     game.getNextQuestion(player.id);
+  //
+  //   if (!question) {
+  //     throw new ForbiddenException();
+  //   }
+  //
+  //   // 4️⃣ Ответить
+  //   const createdAnswer = game.submitAnswer(
+  //     player.id,
+  //     answer,
+  //   );
+  //
+  //   // 5️⃣ Сохранить игру
+  //   await this.gameRepository.save(game);
+  //
+  //   return AnswerViewDto.map(createdAnswer);
+  // }
   async execute(command: AnswerGameCommand) {
-    const { userId, answer } = command;
+    return this.dataSource.transaction(async () => {
+      const game =
+        await this.repo.findActiveByUser(command.userId);
 
-    // 1️⃣ Найти активную игру
-    const game = await this.gameRepository.findActiveGameByUser(userId);
+      if (!game) {
+        throw new Error('Game not found');
+      }
 
-    if (!game) {
-      throw new ForbiddenException();
-    }
+      const answer = game.submitAnswer(
+        command.userId,
+        command.answer,
+      );
 
-    // 2️⃣ Найти игрока
-    const player = game.players.find(
-      p => p.user.id === userId,
-    );
+      await this.repo.save(game);
 
-    if (!player) {
-      throw new ForbiddenException();
-    }
-
-    // 3️⃣ Получить следующий вопрос
-    const question =
-      game.getNextQuestionForPlayer(player.id);
-
-    if (!question) {
-      throw new ForbiddenException();
-    }
-
-    // 4️⃣ Ответить
-    const createdAnswer = game.answerQuestion(
-      player,
-      question,
-      answer,
-    );
-
-    // 5️⃣ Сохранить игру
-    await this.gameRepository.save(game);
-
-    return AnswerViewDto.map(createdAnswer);
+      return {
+        questionId: answer.question.id,
+        answerStatus: answer.status,
+        addedAt: answer.addedAt,
+      };
+    });
   }
 }

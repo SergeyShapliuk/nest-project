@@ -5,9 +5,7 @@ import { Question } from './question.entity';
 
 @Entity('game_questions')
 export class GameQuestion extends BaseEntity {
-  @ManyToOne(() => Game, (g) => g.questions, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => Game, (g) => g.questions, { onDelete: 'CASCADE' })
   game: Game;
 
   @ManyToOne(() => Question)

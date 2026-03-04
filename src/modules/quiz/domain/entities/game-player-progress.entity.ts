@@ -22,4 +22,15 @@ export class PlayerProgress extends BaseEntity {
   @OneToMany(() => Answer, (a) => a.player, { cascade: true })
   answers: Answer[];
 
+  answerCount(): number {
+    return this.answers?.length ?? 0;
+  }
+
+  addScore(): void {
+    this.score++;
+  }
+
+  markFinished(): void {
+    this.finishedAt = new Date();
+  }
 }

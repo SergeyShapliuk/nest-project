@@ -44,7 +44,21 @@ export class Game extends BaseEntity {
     ) as PlayerProgress[];
   }
 
-  getNextQuestionForPlayer(playerId: string): GameQuestion | null {
+  isActive(): boolean {
+    return this.status === GameStatus.ACTIVE;
+  }
+
+  addSecondPlayer(player: PlayerProgress): void {
+    if (this.secondPlayer) {
+      throw new Error('Second player already exists');
+    }
+
+    this.secondPlayer = player;
+    this.status = GameStatus.ACTIVE;
+    this.startGameDate = new Date();
+  }
+
+  getNextQuestion(playerId: string): GameQuestion | null {
     const player = this.players.find(p => p.id === playerId);
     if (!player) return null;
 
@@ -54,50 +68,50 @@ export class Game extends BaseEntity {
       return null;
     }
 
-    return this.questions[index];
+    // return this.questions[index];
+    return this.questions
+      .sort((a, b) => a.order - b.order)[index];
   }
 
-  answerQuestion(
-    player: PlayerProgress,
-    question: GameQuestion,
+  submitAnswer(
+    playerId: string,
     answerText: string,
   ): Answer {
+    if (!this.isActive()) {
+      throw new Error('Game not active');
+    }
 
-    const normalized = answerText.trim();
+    const player = this.players.find(p => p.id === playerId);
+    if (!player) throw new Error('Player not in game');
 
-    const isCorrect =
-      question.question.correctAnswers.includes(normalized);
+    const nextQuestion = this.getNextQuestion(playerId);
+    if (!nextQuestion) {
+      throw new Error('No more questions');
+    }
 
     const answer = Answer.create(
       player,
-      question.question,
-      normalized,
-      isCorrect,
+      nextQuestion.question,
+      answerText,
     );
 
-    if (!player.answers) {
-      player.answers = [];
-    }
-
+    if (!player.answers) player.answers = [];
     player.answers.push(answer);
-
-    if (isCorrect) {
-      player.score++;
-    }
 
     this.checkFinish();
 
     return answer;
   }
 
-  checkFinish() {
+  private checkFinish(): void {
     const finished = this.players.every(
-      p => (p.answers?.length ?? 0) >= 5,
+      p => p.answerCount() >= 5,
     );
 
     if (finished) {
-      this.status = GameStatus.FINISHED; // проверить enum
+      this.status = GameStatus.FINISHED;
       this.finishGameDate = new Date();
+      this.players.forEach(p => p.markFinished());
     }
   }
 }

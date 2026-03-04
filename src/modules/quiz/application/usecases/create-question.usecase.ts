@@ -1,5 +1,6 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { QuizQuestionRepository } from '../../infrastructure/quiz-question.repository';
+import { Question } from '../../domain/entities/question.entity';
 
 export class CreateQuestionCommand implements ICommand {
   constructor(
@@ -11,19 +12,16 @@ export class CreateQuestionCommand implements ICommand {
 
 @CommandHandler(CreateQuestionCommand)
 export class CreateQuestionUseCase
-  implements ICommandHandler<CreateQuestionCommand, string> {
+  implements ICommandHandler<CreateQuestionCommand, Question> {
   constructor(
-    private quizQuestionRepository: QuizQuestionRepository,
+    private repo: QuizQuestionRepository,
   ) {
   }
 
-  async execute({ body, correctAnswers }: CreateQuestionCommand): Promise<string> {
-    console.log('❤️ Execute');
+  async execute(command: CreateQuestionCommand) {
+    const { body, correctAnswers } = command;
+    const question = Question.createInstance({ body, correctAnswers });
 
-    const question = await this.quizQuestionRepository.create(
-      { body: body, correctAnswers: correctAnswers },
-    );
-
-    return question.id; // Возвращаем string (UUID) вместо Types.ObjectId
+    return this.repo.save(question);
   }
 }

@@ -13,42 +13,44 @@ export class QuizQuestionRepository {
     private questionRepository: Repository<Question>
   ) {}
 
-  async create(dto: {
-    body: string;
-    correctAnswers: string[];
-  }): Promise<Question> {
-    const question = Question.createInstance(dto);
+  async save(question: Question): Promise<Question> {
     return this.questionRepository.save(question);
   }
 
-  async findAll(): Promise<Question[]> {
-    return this.questionRepository.find();
-  }
-
   async findById(id: string): Promise<Question | null> {
-    console.log('id', id);
     return this.questionRepository.findOne({
       where: { id, deletedAt: IsNull() },
     });
   }
 
-  async findOrNotFoundFail(id: string): Promise<Question> {
+  async findByIdOrFail(id: string): Promise<Question> {
     const question = await this.findById(id);
-    console.log('oneToOneBlog:', question);
-    if (!question) {
-      //TODO: replace with domain exception
-      throw new NotFoundException('question not found');
-    }
-
+    if (!question) throw new Error('Question not found');
     return question;
   }
 
+  async findPublished(limit?: number): Promise<Question[]> {
+    const qb = this.questionRepository
+      .createQueryBuilder('q')
+      .where('q.published = true')
+      .andWhere('q.deletedAt IS NULL')
+      .orderBy('RANDOM()');
 
-  async save(entity: Question): Promise<Question> {
-    return this.questionRepository.save(entity);
+    if (limit) qb.limit(limit);
+
+    return qb.getMany();
   }
 
-  async delete(id: string): Promise<void> {
-    await this.questionRepository.delete(id);
+  async softDelete(id: string): Promise<void> {
+    await this.questionRepository.softDelete(id);
   }
+
+  // async create(dto: {
+  //   body: string;
+  //   correctAnswers: string[];
+  // }): Promise<Question> {
+  //   const question = Question.createInstance(dto);
+  //   return this.save(question);
+  // }
+
 }
