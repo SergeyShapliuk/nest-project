@@ -37,6 +37,7 @@ export class Question {
   gameQuestions: GameQuestion[];
 
   static createInstance(dto: { body: string, correctAnswers: string[] }): Question {
+    console.log({dto})
     const question = new Question();
 
     question.body = dto.body.trim();

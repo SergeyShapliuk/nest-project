@@ -12,7 +12,7 @@ export class CreateQuestionCommand implements ICommand {
 
 @CommandHandler(CreateQuestionCommand)
 export class CreateQuestionUseCase
-  implements ICommandHandler<CreateQuestionCommand, Question> {
+  implements ICommandHandler<CreateQuestionCommand, string> {
   constructor(
     private repo: QuizQuestionRepository,
   ) {
@@ -21,7 +21,7 @@ export class CreateQuestionUseCase
   async execute(command: CreateQuestionCommand) {
     const { body, correctAnswers } = command;
     const question = Question.createInstance({ body, correctAnswers });
-
-    return this.repo.save(question);
+    const saved = await this.repo.save(question);
+    return saved.id;
   }
 }
