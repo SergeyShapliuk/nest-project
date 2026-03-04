@@ -88,7 +88,7 @@ export class QuizQuestionQueryRepository {
     qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
 
     if (safeSortBy !== 'createdAt') {
-      qb.addOrderBy('q.createdAt', 'DESC');
+      qb.addOrderBy('q.id', 'ASC');
     }
     // }
 

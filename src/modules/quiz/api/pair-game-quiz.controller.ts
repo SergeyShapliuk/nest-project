@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  Get,
+  Get, HttpCode, HttpStatus,
   Param, ParseUUIDPipe,
   Post,
   UseGuards,
@@ -49,6 +49,7 @@ export class PairGameQuizController {
 
   @ApiBearerAuth()
   @Post('connection')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   async join(@ExtractUserIfExistsFromRequest() user: { id: string }) {
     // async join() {
@@ -58,6 +59,7 @@ export class PairGameQuizController {
 
   @ApiBearerAuth()
   @Post('my-current/answers')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   async answer(@Body() body: AnswerInputDto,
                @ExtractUserIfExistsFromRequest() user: { id: string }) {
