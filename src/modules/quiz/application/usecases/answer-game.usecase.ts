@@ -91,29 +91,37 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
         });
       }
 
-      if (!player.answers) {
-        player.answers = []; // гарантируем инициализацию
-      }
-      const answer = game.submitAnswer(
-        player.id,
-        command.answer,
-      );
-      console.log("answer",answer)
-      console.log("player",player)
-      console.log("command.answer",command)
-      const savedAnswer = await manager.getRepository(Answer).save(answer);
-      player.answers.push(savedAnswer);
+      console.log('ДО сохранения - ответов у игрока:', player.answers?.length || 0);
+
+      const answer = game.submitAnswer(player.id, command.answer);
+
+      console.log('После submitAnswer - ответов в памяти:', player.answers?.length);
+
+      // Сохраняем через каскад
       await manager.getRepository(PlayerProgress).save(player);
-      await manager.getRepository(Game).save(game); // сохраняем игру (статус, даты)
-      const refreshedGame = await this.repo.findActiveByUser(command.userId);
-      console.log("savedAnswer",savedAnswer)
-      console.log(" player.answers.push(savedAnswer);",player)
-      console.log('refreshedGame firstPlayerProgress.answers:', refreshedGame?.firstPlayer.answers);
+      await manager.getRepository(Game).save(game);
+
+      // ПРОВЕРКА: явно перезагружаем игрока с ответами
+      const savedPlayer = await manager.getRepository(PlayerProgress).findOne({
+        where: { id: player.id },
+        relations: ['answers'],
+      });
+
+      console.log('ПОСЛЕ сохранения - ответов в БД:', savedPlayer?.answers?.length || 0);
+
+      // Обновляем ссылки в game только если savedPlayer не null
+      if (savedPlayer) {
+        if (game.firstPlayer.id === player.id) {
+          game.firstPlayer = savedPlayer;
+        } else {
+          game.secondPlayer = savedPlayer;
+        }
+      }
+
       return {
         questionId: answer.question.id,
         answerStatus: answer.status,
         addedAt: answer.addedAt,
-        // answerId: answer.id, // теперь id точно будет
       };
     });
   }
