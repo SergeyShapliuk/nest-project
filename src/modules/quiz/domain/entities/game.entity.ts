@@ -61,6 +61,18 @@ export class Game extends BaseEntity {
   }
 
   submitAnswer(playerId: string, answerText: string): Answer {
+    console.log('=== SUBMIT ANSWER ===');
+
+    console.log('Game ID:', this.id);
+    console.log('playerId:', playerId);
+    console.log('current answers count:', this.players.find(p => p.id === playerId)?.answerCount());
+    console.log('first player answers:', this.firstPlayer.answerCount());
+    console.log('second player answers:', this.secondPlayer?.answerCount());
+    console.log('first player id:', this.firstPlayer.id);
+    console.log('second player id:', this.secondPlayer?.id);
+    console.log('Are they equal?', this.firstPlayer.id === this.secondPlayer?.id);
+    console.log('first player finishedAt:', this.firstPlayer.finishedAt);  // null
+    console.log('second player finishedAt:', this.secondPlayer?.finishedAt);
     if (!this.isActive()) {
       throw new DomainException({
         code: DomainExceptionCode.Forbidden,
@@ -81,7 +93,9 @@ export class Game extends BaseEntity {
       player.answers = []; // гарантируем инициализацию массива
     }
     const currentIndex = player.answerCount();
-
+    console.log('first finishedAt:', player.finishedAt);
+    console.log('second finishedAt:', player.finishedAt);
+    console.log('player', player);
     if (currentIndex >= this.questions.length) {
       throw new DomainException({
         code: DomainExceptionCode.Forbidden,
@@ -104,12 +118,16 @@ export class Game extends BaseEntity {
     console.log('gameQuestion', gameQuestion);
     console.log('this.questions', this.questions);
     console.log('currentIndex', currentIndex);
+    console.log('first finishedAt:', player.finishedAt);
+    console.log('second finishedAt:', player.finishedAt);
     if (isCorrect) {
       player.addScore();
     }
 
     if (player.answerCount() === this.questions.length) {
       player.markFinished();
+      console.log(`🎯 Player ${player.id} FINISHED at:`, player.finishedAt); // 🔴 НОВЫЙ ЛОГ
+
     }
 
     this.checkFinish();
@@ -118,6 +136,11 @@ export class Game extends BaseEntity {
   }
 
   private checkFinish(): void {
+    console.log('=== CHECK FINISH ===');
+    console.log('first player answers:', this.firstPlayer.answerCount());
+    console.log('second player answers:', this.secondPlayer?.answerCount());
+    console.log('first player finishedAt:', this.firstPlayer.finishedAt);
+    console.log('second player finishedAt:', this.secondPlayer?.finishedAt);
     if (!this.secondPlayer) return;
 
     const first = this.firstPlayer;
@@ -132,13 +155,20 @@ export class Game extends BaseEntity {
     this.status = GameStatus.FINISHED;
     this.finishGameDate = new Date();
 
-    first.markFinished();
-    second.markFinished();
+    // first.markFinished();
+    // second.markFinished();
 
     // ===== БОНУС =====
 
     const firstHasCorrect = first.score > 0;
     const secondHasCorrect = second.score > 0;
+
+    console.log('first finishedAt:', first.finishedAt);
+    console.log('second finishedAt:', second.finishedAt);
+    console.log('first score before bonus:', first.score);
+    console.log('second score before bonus:', second.score);
+    console.log('firstHasCorrect:', firstHasCorrect);
+    console.log('secondHasCorrect:', secondHasCorrect);
 
     if (
       first.finishedAt &&
@@ -147,6 +177,7 @@ export class Game extends BaseEntity {
       firstHasCorrect
     ) {
       first.score += 1;
+      console.log('🏆 BONUS to FIRST player (faster)');
     }
 
     if (
@@ -156,6 +187,9 @@ export class Game extends BaseEntity {
       secondHasCorrect
     ) {
       second.score += 1;
+      console.log('🏆 BONUS to SECOND player (faster)');
     }
+    console.log('Final scores - first:', first.score, 'second:', second.score);
+
   }
 }

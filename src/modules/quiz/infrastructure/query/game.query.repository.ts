@@ -43,6 +43,8 @@ export class GameQueryRepository {
       .andWhere('g.deletedAt IS NULL')
       .orderBy('g.createdAt', 'DESC')
       .addOrderBy('gq.order', 'ASC')
+      .addOrderBy('fpAnswers.addedAt', 'ASC')  // СОРТИРОВКА ОТВЕТОВ ПЕРВОГО
+      .addOrderBy('spAnswers.addedAt', 'ASC')  // СОРТИРОВКА ОТВЕТОВ ВТОРОГО
       .getOne();
 
     if (!game) return null;
@@ -86,21 +88,30 @@ export class GameQueryRepository {
     gameId: string,
     userId: string,
   ): Promise<GameViewDto | null> {
-    const game = await this.gameRepo.findOne({
-      where: { id: gameId, deletedAt: IsNull() },
-      relations: [
-        'firstPlayer',
-        'firstPlayer.user',
-        'firstPlayer.answers',          // <-- добавляем ответы
-        'firstPlayer.answers.question', // <-- и вопросы к ним
-        'secondPlayer',
-        'secondPlayer.user',
-        'secondPlayer.answers',         // <-- добавляем ответы
-        'secondPlayer.answers.question',// <-- и вопросы к ним
-        'questions',
-        'questions.question',
-      ],
-    });
+    const game = await this.gameRepo
+      .createQueryBuilder('g')
+
+      .leftJoinAndSelect('g.firstPlayer', 'fp')
+      .leftJoinAndSelect('fp.user', 'fpUser')
+      .leftJoinAndSelect('fp.answers', 'fpAnswers')
+      .leftJoinAndSelect('fpAnswers.question', 'fpAnswerQuestion')
+
+      .leftJoinAndSelect('g.secondPlayer', 'sp')
+      .leftJoinAndSelect('sp.user', 'spUser')
+      .leftJoinAndSelect('sp.answers', 'spAnswers')
+      .leftJoinAndSelect('spAnswers.question', 'spAnswerQuestion')
+
+      .leftJoinAndSelect('g.questions', 'gq')
+      .leftJoinAndSelect('gq.question', 'question')
+
+      .where('g.id = :gameId', { gameId })
+      .andWhere('g.deletedAt IS NULL')
+
+      .orderBy('gq.order', 'ASC')
+      .addOrderBy('fpAnswers.addedAt', 'ASC')  // сортировка ответов первого
+      .addOrderBy('spAnswers.addedAt', 'ASC')  // сортировка ответов второго
+
+      .getOne();
 
     if (!game) {
       throw new DomainException({
