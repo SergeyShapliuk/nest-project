@@ -87,12 +87,14 @@ export class QuizQuestionQueryRepository {
     // } else {
     // qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
     if (safeSortBy === 'body') {
-      qb.orderBy(`q.${safeSortBy} COLLATE "C"`, safeSortDirection);
+      // Сортировка по числу в конце body
+      qb.orderBy(`CAST(REGEXP_REPLACE(q.body, '\\D','','g') AS INTEGER)`, safeSortDirection);
     } else {
       qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
     }
-    if (safeSortBy !== 'createdAt') {
-      qb.addOrderBy('q.id', 'ASC');
+
+    if (safeSortBy !== 'id') {
+      qb.addOrderBy('q.id', 'ASC'); // стабилизация при одинаковых числах
     }
     // }
 

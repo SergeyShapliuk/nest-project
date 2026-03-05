@@ -21,6 +21,7 @@ import { QuizQuestionQueryRepository } from './infrastructure/query/quiz-questio
 import { QuizQuestionRepository } from './infrastructure/quiz-question.repository';
 import { DeleteQuestionUseCase } from './application/usecases/delete-question.usecase';
 import { AnswerGameUseCase } from './application/usecases/answer-game.usecase';
+import { User } from '../users/domain/user.entity';
 
 const commandHandlers = [
   JoinGameUseCase, CreateQuestionUseCase, UpdateQuestionUseCase, UpdateQuestionPublishUseCase, DeleteQuestionUseCase, AnswerGameUseCase,
@@ -29,7 +30,7 @@ const commandHandlers = [
 const queryHandlers = [GetMyCurrentGameHandler, GetGameByIdHandler, GetQuizQuestionsHandler];
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Game, PlayerProgress, GameQuestion, Answer, Question]), UserModule],
+  imports: [TypeOrmModule.forFeature([User, Game, PlayerProgress, GameQuestion, Answer, Question]), UserModule],
   controllers: [PairGameQuizController, SuperAdminQuizController],
   providers: [...commandHandlers, ...queryHandlers, GameRepository, GameQueryRepository, QuizQuestionQueryRepository, QuizQuestionRepository],
   exports: [],

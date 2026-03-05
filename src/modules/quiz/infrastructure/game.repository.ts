@@ -287,6 +287,7 @@ import { IsNull, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GameStatus } from '../domain/enums/game-status.enum';
+import { User } from '../../users/domain/user.entity';
 
 @Injectable()
 export class GameRepository {
@@ -297,6 +298,8 @@ export class GameRepository {
     private readonly progressRepo: Repository<PlayerProgress>,
     @InjectRepository(Question)
     private readonly questionRepo: Repository<Question>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {
   }
 
@@ -362,8 +365,12 @@ export class GameRepository {
   /* ================= FACTORY HELPERS ================= */
 
   async createProgress(userId: string): Promise<PlayerProgress> {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      select: ['id', 'login'], // выбираем именно нужные поля
+    });
     const progress = this.progressRepo.create({
-      user: { id: userId } as any,
+      user: user as any,
       score: 0,
     });
 

@@ -59,7 +59,7 @@ export class JoinGameUseCase
     return this.dataSource.transaction(async () => {
       const active =
         await this.repo.findActiveByUser(command.userId);
-      console.log('active', active);
+      // console.log('active', active);
       if (active) {
         // return GameViewDto.map(active);
 
@@ -73,7 +73,7 @@ export class JoinGameUseCase
 // console.log({pending})
       const progress =
         await this.repo.createProgress(command.userId);
-
+      // console.log({progress})
       if (!pending) {
         const game = new Game();
         game.status = GameStatus.PENDING_SECOND_PLAYER;
