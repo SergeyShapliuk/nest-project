@@ -93,6 +93,7 @@ export class JoinGameUseCase
         const gq = new GameQuestion();
         gq.question = q;
         gq.order = i + 1;
+        gq.game = pending;
         return gq;
       });
 
