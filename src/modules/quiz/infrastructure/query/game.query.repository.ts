@@ -38,7 +38,7 @@ export class GameQueryRepository {
       })
       .andWhere(
         'g.status = ANY(:statuses::pair_games_status_enum[])',
-        { statuses: [GameStatus.PENDING_SECOND_PLAYER, GameStatus.ACTIVE] }
+        { statuses: [GameStatus.PENDING_SECOND_PLAYER, GameStatus.ACTIVE] },
       )
       .andWhere('g.deletedAt IS NULL')
       .orderBy('g.createdAt', 'DESC')
@@ -93,6 +93,8 @@ export class GameQueryRepository {
         'firstPlayer.user',
         'secondPlayer',
         'secondPlayer.user',
+        'questions',
+        'questions.question',
       ],
     });
 

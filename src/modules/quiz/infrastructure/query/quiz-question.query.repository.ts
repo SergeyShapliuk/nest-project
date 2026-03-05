@@ -87,14 +87,13 @@ export class QuizQuestionQueryRepository {
     // } else {
     // qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
     if (safeSortBy === 'body') {
-      qb.orderBy(`q.body COLLATE "C"`, safeSortDirection);
+      qb.orderBy(
+        `CAST(SUBSTRING(q.body FROM '.*([0-9]+)$') AS INTEGER)`,
+        safeSortDirection,
+      );
     } else {
       qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
     }
-
-    // if (safeSortBy !== 'createdAt') {
-    //   qb.addOrderBy('q.id', 'ASC');
-    // }
     // }
 
     /* ========= PAGINATION ========= */
