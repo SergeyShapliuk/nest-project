@@ -90,6 +90,10 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
           message: 'Player not in game',
         });
       }
+
+      if (!player.answers) {
+        player.answers = []; // гарантируем инициализацию
+      }
       const answer = game.submitAnswer(
         player.id,
         command.answer,
@@ -97,10 +101,13 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
       console.log("answer",answer)
       console.log("player",player)
       console.log("command.answer",command)
-      await manager.getRepository(Answer).save(answer); // обязательно сохраняем сам ответ
-      await manager.getRepository(PlayerProgress).save(player); // сохраняем прогресс игрока
+      const savedAnswer = await manager.getRepository(Answer).save(answer);
+      player.answers.push(savedAnswer);
+      await manager.getRepository(PlayerProgress).save(player);
       await manager.getRepository(Game).save(game); // сохраняем игру (статус, даты)
       const refreshedGame = await this.repo.findActiveByUser(command.userId);
+      console.log("savedAnswer",savedAnswer)
+      console.log(" player.answers.push(savedAnswer);",player)
       console.log('refreshedGame firstPlayerProgress.answers:', refreshedGame?.firstPlayer.answers);
       return {
         questionId: answer.question.id,
