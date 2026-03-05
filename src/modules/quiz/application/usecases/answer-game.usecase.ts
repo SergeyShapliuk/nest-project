@@ -25,45 +25,6 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
     private readonly dataSource: DataSource,
   ) {
   }
-
-  // async execute(command: AnswerGameCommand) {
-  //   const { userId, answer } = command;
-  //
-  //   // 1️⃣ Найти активную игру
-  //   const game = await this.gameRepository.findActiveByUser(userId);
-  //
-  //   if (!game) {
-  //     throw new ForbiddenException();
-  //   }
-  //
-  //   // 2️⃣ Найти игрока
-  //   const player = game.players.find(
-  //     p => p.user.id === userId,
-  //   );
-  //
-  //   if (!player) {
-  //     throw new ForbiddenException();
-  //   }
-  //
-  //   // 3️⃣ Получить следующий вопрос
-  //   const question =
-  //     game.getNextQuestion(player.id);
-  //
-  //   if (!question) {
-  //     throw new ForbiddenException();
-  //   }
-  //
-  //   // 4️⃣ Ответить
-  //   const createdAnswer = game.submitAnswer(
-  //     player.id,
-  //     answer,
-  //   );
-  //
-  //   // 5️⃣ Сохранить игру
-  //   await this.gameRepository.save(game);
-  //
-  //   return AnswerViewDto.map(createdAnswer);
-  // }
   async execute(command: AnswerGameCommand) {
     return this.dataSource.transaction(async (manager) => {
       const game =

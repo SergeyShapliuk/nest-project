@@ -91,8 +91,12 @@ export class GameQueryRepository {
       relations: [
         'firstPlayer',
         'firstPlayer.user',
+        'firstPlayer.answers',          // <-- добавляем ответы
+        'firstPlayer.answers.question', // <-- и вопросы к ним
         'secondPlayer',
         'secondPlayer.user',
+        'secondPlayer.answers',         // <-- добавляем ответы
+        'secondPlayer.answers.question',// <-- и вопросы к ним
         'questions',
         'questions.question',
       ],
