@@ -87,7 +87,7 @@ export class JoinGameUseCase
 
       const questions =
         await this.repo.getRandomPublishedQuestions(5);
-      questions.sort(() => Math.random() - 0.5);
+      // questions.sort(() => Math.random() - 0.5);
 // console.log({questions})
       pending.questions = questions.map((q, i) => {
         const gq = new GameQuestion();

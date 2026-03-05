@@ -90,7 +90,7 @@ export class QuizQuestionQueryRepository {
       qb.orderBy(
         `CAST(SUBSTRING(q.body FROM '.*([0-9]+)$') AS INTEGER)`,
         safeSortDirection,
-      );
+      ) .addOrderBy('q.id', 'ASC');
     } else {
       qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
     }
