@@ -75,7 +75,7 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
           message: 'Game not found',
         });
       }
-console.log({command})
+
       const player = game.players.find(
         p => p.user.id === command.userId,
       );
@@ -92,11 +92,13 @@ console.log({command})
       );
       console.log("answer",answer)
       console.log("player.id",player.id)
-      console.log("command.answer",command.answer)
+      console.log("command.answer",command)
       await manager.getRepository(Answer).save(answer); // обязательно сохраняем сам ответ
+      player.answers.push(answer);
       await manager.getRepository(PlayerProgress).save(player); // сохраняем прогресс игрока
       await manager.getRepository(Game).save(game); // сохраняем игру (статус, даты)
-
+      const refreshedGame = await this.repo.findActiveByUser(command.userId);
+      console.log('refreshedGame firstPlayerProgress.answers:', refreshedGame?.firstPlayer.answers);
       return {
         questionId: answer.question.id,
         answerStatus: answer.status,

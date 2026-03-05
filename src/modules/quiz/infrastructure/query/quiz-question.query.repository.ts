@@ -85,15 +85,7 @@ export class QuizQuestionQueryRepository {
     //     safeSortDirection,
     //   );
     // } else {
-    // qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
-    if (safeSortBy === 'body') {
-      qb.orderBy(
-        `CAST(SUBSTRING(q.body FROM '.*([0-9]+)$') AS INTEGER)`,
-        safeSortDirection,
-      ) .addOrderBy('q.id', 'ASC');
-    } else {
-      qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
-    }
+    qb.orderBy(`q.${safeSortBy}`, safeSortDirection);
     // }
 
     /* ========= PAGINATION ========= */
@@ -101,11 +93,14 @@ export class QuizQuestionQueryRepository {
     qb.skip(queryDto.calculateSkip()).take(pageSize);
 
     /* ========= EXECUTE ========= */
-
+    console.log({ queryDto });
     const [questions, totalCount] = await qb.getManyAndCount();
-
+    console.log('SQL order results:');
+    questions.forEach(q => console.log(q.body, q.id, q.createdAt));
     const items = questions.map(QuestionViewDto.mapToView);
 
+
+    console.log('Mapped items for test:', items.map(i => i.body));
     return PaginatedViewDto.mapToView({
       items,
       totalCount,
